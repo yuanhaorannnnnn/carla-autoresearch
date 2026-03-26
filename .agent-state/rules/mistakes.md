@@ -13,3 +13,8 @@
 ❌ 错误做法：为了图快，写临时内联 Python 脚本去复刻 benchmark_client.py 或其他正式入口逻辑，导致参数和流程与仓库真实实现不一致。
 ✅ 正确做法：验证正式工作流时，优先直接运行仓库里的正式入口；如果确实需要额外观测字段，先把观测能力加到正式入口里，再执行正式代码路径。
 触发场景：当任务目标是验证 benchmark、实验控制器、CLI 入口或任何当前仓库真实行为时。
+
+## Rule
+❌ 错误做法：当改动范围扩到 LibCarla 或 PythonAPI 侧后，package 完成后仍直接复用旧的 carla Python 包启动客户端，导致客户端仍在用旧 wheel。
+✅ 正确做法：如果改动范围扩到 LibCarla 或 Python 端，每次 package 之后启动客户端前都先在 py38 环境里 force-reinstall 新生成的 wheel：pip install /media/yhr/2T/CarlaUE5/Build/PythonAPI/dist/carla-0.10.0-cp38-cp38-linux_x86_64.whl --force-reinstall，然后再启动客户端脚本。
+触发场景：当优化或修复涉及 /media/yhr/2T/CarlaUE5/LibCarla、PythonAPI、carla Python 绑定或任何会改变 Python wheel 内容的代码时。
