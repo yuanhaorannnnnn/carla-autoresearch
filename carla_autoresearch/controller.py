@@ -147,14 +147,10 @@ class CarlaTargetAdapter:
         output_path: Path,
         client_script: Path | None = None,
     ) -> list[str]:
-        script = client_script or self.paths.default_client_script
         command = [
-            "conda",
-            "run",
-            "-n",
-            self.paths.client_conda_env,
-            "python",
-            str(script),
+            "python3",
+            "-m",
+            "carla_autoresearch.benchmark_client",
             "--host",
             self.paths.host,
             "--port",
