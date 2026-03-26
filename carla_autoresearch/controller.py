@@ -44,6 +44,7 @@ class CarlaPaths:
         default_factory=lambda: Path(__file__).with_name("benchmark_client.py")
     )
     client_conda_env: str = "py38"
+    conda_sh_path: Path = Path("/home/lkshpc/anaconda3/etc/profile.d/conda.sh")
     host: str = "127.0.0.1"
     port: int = 2000
     town: str = "Town05"
@@ -110,16 +111,54 @@ class CarlaTargetAdapter:
     def build_command(self) -> list[str]:
         return ["bash", "./package.sh"]
 
+    def build_launcher_script_content(self, log_path: Path, exit_code_path: Path) -> str:
+        log_path = log_path.resolve()
+        exit_code_path = exit_code_path.resolve()
+        return (
+            "#!/usr/bin/env bash\n"
+            "set -eo pipefail\n"
+            f'trap \'printf "%s" $? > {shlex.quote(str(exit_code_path))}\' EXIT\n'
+            f"source {shlex.quote(str(self.paths.conda_sh_path))}\n"
+            f"conda activate {shlex.quote(self.paths.client_conda_env)}\n"
+            f"cd {shlex.quote(str(self.paths.project_dir))}\n"
+            f"{' '.join(shlex.quote(part) for part in self.build_command())} "
+            f"> {shlex.quote(str(log_path))} 2>&1\n"
+            "\n"
+        )
+
+    def write_build_launcher(self, launcher_path: Path, log_path: Path, exit_code_path: Path) -> None:
+        launcher_path.write_text(
+            self.build_launcher_script_content(log_path, exit_code_path),
+            encoding="utf-8",
+        )
+        launcher_path.chmod(0o755)
+
+    def build_terminal_command(
+        self,
+        launcher_path: Path,
+        log_path: Path,
+        exit_code_path: Path,
+    ) -> list[str]:
+        self.write_build_launcher(launcher_path, log_path, exit_code_path)
+        return ["gnome-terminal", "--", "bash", str(launcher_path)]
+
     def server_command(self) -> list[str]:
         return ["sh", self.paths.server_script.name]
 
     def server_terminal_command(self, log_path: Path) -> list[str]:
+        log_path = log_path.resolve()
         script = (
             f"cd {shlex.quote(str(self.paths.server_script.parent))} && "
             f"{' '.join(shlex.quote(part) for part in self.server_command())} "
             f"> {shlex.quote(str(log_path))} 2>&1"
         )
         return ["gnome-terminal", "--", "bash", "-lc", script]
+
+    def server_log_indicates_ready(self, text: str) -> bool:
+        return (
+            "Initialized CarlaServer" in text
+            and "LoadMap Load map complete" in text
+        )
 
     def find_running_server_pids(self) -> list[int]:
         result = subprocess.run(
@@ -174,11 +213,13 @@ class CarlaTargetAdapter:
         log_path: Path,
         client_script: Path | None = None,
     ) -> list[str]:
+        output_path = output_path.resolve()
+        log_path = log_path.resolve()
         benchmark_cmd = " ".join(
             shlex.quote(part) for part in self.benchmark_command(output_path, client_script)
         )
         script = (
-            'source "$(conda info --base)/etc/profile.d/conda.sh" && '
+            f"source {shlex.quote(str(self.paths.conda_sh_path))} && "
             f"conda activate {shlex.quote(self.paths.client_conda_env)} && "
             f"cd {shlex.quote(str(self.paths.default_client_script.parent.parent))} && "
             f"{benchmark_cmd} > {shlex.quote(str(log_path))} 2>&1"
@@ -186,18 +227,41 @@ class CarlaTargetAdapter:
         return ["gnome-terminal", "--", "bash", "-lc", script]
 
     def run_build(self, log_path: Path) -> subprocess.CompletedProcess[str]:
-        with log_path.open("w", encoding="utf-8") as log_file:
-            return subprocess.run(
-                self.build_command(),
-                cwd=self.paths.project_dir,
-                stdout=log_file,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=self.paths.build_timeout_seconds,
-                check=False,
-            )
+        exit_code_path = log_path.with_suffix(".exitcode")
+        launcher_path = log_path.with_suffix(".launcher.sh")
+        if exit_code_path.exists():
+            exit_code_path.unlink()
+        if launcher_path.exists():
+            launcher_path.unlink()
+
+        launch = subprocess.run(
+            self.build_terminal_command(launcher_path, log_path, exit_code_path),
+            check=False,
+            text=True,
+        )
+        if launch.returncode != 0:
+            return launch
+
+        deadline = time.time() + self.paths.build_timeout_seconds
+        while time.time() < deadline:
+            if exit_code_path.exists():
+                try:
+                    returncode = int(exit_code_path.read_text(encoding="utf-8").strip() or "1")
+                except ValueError:
+                    returncode = 1
+                return subprocess.CompletedProcess(
+                    args=launch.args,
+                    returncode=returncode,
+                )
+            time.sleep(5)
+
+        return subprocess.CompletedProcess(
+            args=launch.args,
+            returncode=1,
+        )
 
     def launch_server(self, log_path: Path) -> list[int]:
+        log_path = log_path.resolve()
         existing_pids = set(self.find_running_server_pids())
         subprocess.run(
             self.server_terminal_command(log_path),
@@ -208,8 +272,10 @@ class CarlaTargetAdapter:
         while time.time() < deadline:
             current_pids = set(self.find_running_server_pids())
             new_pids = sorted(current_pids - existing_pids)
-            if new_pids:
-                return new_pids
+            if new_pids and log_path.exists():
+                log_text = log_path.read_text(encoding="utf-8", errors="ignore")
+                if self.server_log_indicates_ready(log_text):
+                    return new_pids
             time.sleep(1)
         return []
 

@@ -23,5 +23,4 @@ dev/
 # Results file
 results.tsv
 
-tests/
 runs/

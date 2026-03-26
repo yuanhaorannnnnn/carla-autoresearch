@@ -54,6 +54,11 @@ Use explicit lidar attributes instead of relying on blueprint defaults.
    - `discard`: run succeeded but no valid improvement
    - `crash`: build/run/metric extraction failed
 7. Append all runs to `results.tsv`.
+8. If the code changes touched `LibCarla`, `PythonAPI`, or any path that changes the generated Python wheel, then before starting the client you must:
+   - activate `py38`
+   - run:
+     `pip install /media/yhr/2T/CarlaUE5/Build/PythonAPI/dist/carla-0.10.0-cp38-cp38-linux_x86_64.whl --force-reinstall`
+   - only then launch the client script
 
 ## Guardrails
 
@@ -62,3 +67,4 @@ Use explicit lidar attributes instead of relying on blueprint defaults.
 - Do not accept a faster run if point count changed.
 - Prefer simpler LiDAR code when gains are similar.
 - Do not validate official workflow behavior with ad-hoc inline scripts that duplicate `benchmark_client.py`; if extra observation is needed, add it to the official path first.
+- If the current change modifies `LibCarla` or Python bindings, do not reuse an old installed `carla` wheel when validating the client path.

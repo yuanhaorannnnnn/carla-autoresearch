@@ -22,3 +22,9 @@ needed, and only promote mistakes that are worth reusing as long-term rules.
 - 错误做法：在 `2000` 端口已有 CarlaServer 运行时，再起一个新的 Shipping 服务端，导致 `Address already in use`。
 - 正确做法：手动 smoke test、点数验证或 benchmark 验证前，先检查是否已有活跃 CarlaServer；如果已有，就直接复用该实例。只有在明确需要新实例时才重新启动。
 - 触发场景：当任务涉及手动联调、点数验证、benchmark 复测或任何可能重复占用 CARLA RPC 端口的流程时。
+
+### 当改动范围涉及 LibCarla 或 PythonAPI 时，package 后不要直接复用旧的 carla Python 包。
+
+- 错误做法：修改了 `LibCarla`、`PythonAPI` 或 Python 绑定相关代码后，`package` 完成仍直接启动客户端，继续使用环境里旧的 `carla` wheel。
+- 正确做法：如果改动会影响 Python wheel，`package` 完成后先在 `py38` 环境里执行 `pip install /media/yhr/2T/CarlaUE5/Build/PythonAPI/dist/carla-0.10.0-cp38-cp38-linux_x86_64.whl --force-reinstall`，再启动客户端脚本。
+- 触发场景：当优化或修复涉及 `/media/yhr/2T/CarlaUE5/LibCarla`、`PythonAPI`、carla Python 绑定或任何会改变 wheel 内容的代码时。

@@ -89,3 +89,5 @@ python3 -m carla_autoresearch.experiment \
 - 真实联调时，服务端和客户端都优先在真正的新桌面终端里运行；客户端先激活 `py38` 再执行。
 - 如果当前已有活跃 `CarlaServer`，手动验证和 smoke test 优先复用，不要重复拉起第二个实例。
 - 验证正式流程时，不要用临时内联脚本复制 `benchmark_client.py` 逻辑。
+- 如果后续改动范围扩大到 `LibCarla`、`PythonAPI` 或任何会改变 Python wheel 的代码，`package` 完成后启动客户端前必须先在 `py38` 环境里执行：
+  `pip install /media/yhr/2T/CarlaUE5/Build/PythonAPI/dist/carla-0.10.0-cp38-cp38-linux_x86_64.whl --force-reinstall`
