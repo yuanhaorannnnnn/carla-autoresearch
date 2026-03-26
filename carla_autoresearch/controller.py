@@ -108,7 +108,7 @@ class CarlaTargetAdapter:
         self.paths = paths
 
     def build_command(self) -> list[str]:
-        return ["./package.sh"]
+        return ["bash", "./package.sh"]
 
     def server_command(self) -> list[str]:
         return ["sh", self.paths.server_script.name]
