@@ -25,3 +25,34 @@
 - 自动化 `package` 仍存在流程不稳定问题：Python 直接拉起 `gnome-terminal` 并传 payload 不可靠；当前代码已改成 launcher `.sh` 方案，但本轮先退化为用户手动执行 `package`
 - 第二轮恢复全自动后又发现一个明确实现问题：launcher 里若使用相对日志路径，在脚本内部 `cd /media/yhr/2T/CarlaUE5` 后会导致 shell 重定向失败，从而出现只写出 `build.exitcode`、不生成 `build.log` 的现象。现已修复为统一使用绝对路径。
 - 第二轮全自动重试又发现一个更前置的问题：在 `gnome-terminal` 拉起的裸 shell 中，launcher 不能依赖 `conda info --base` 先找到 `conda.sh`；现已改成固定使用 `/home/lkshpc/anaconda3/etc/profile.d/conda.sh`。
+- 继续排查后又确认一个流程级问题：服务端启动后如果客户端过早切图，`benchmark_client.py` 的 `client.load_world("Town05")` 可能抛出 `RuntimeError: std::exception`。现已把 `launch_server()` 改为同时等待 `Initialized CarlaServer` 与 `LoadMap Load map complete` 两个 ready 信号。
+- `opt1` 已提交到 `CarlaUE5`：`e3c58fed7 Optimize lidar by hoisting transform and range reads`
+- `opt2` 已提交到 `CarlaUE5`：`8d1ef242e Optimize lidar angle stepping in semantic raycast loop`
+- `opt3` 结果：
+  - `runs/opt3-20260326-140120/metrics.json`
+  - `scan_latency_ms_median=37.83054099767469`
+  - `point_count_all_equal=false`
+  - 结论：性能略优于 `opt2`，但 correctness 失守，应 `discard`
+- 新主线已经切到 `RayCastMemsLidar + AT128`：
+  - `sensor_blueprint = sensor.lidar.ray_cast_mems`
+  - `scanning_patterns = AT128`
+  - `beams_num = 153600`
+  - 其余共享参数沿用当前 `ray_cast` 基线
+- 新主线基线结果已产生：
+  - `runs/mems-at128-baseline-20260326-151323/metrics.json`
+  - `scan_latency_ms_median=16.247665499918185`
+  - `scan_latency_ms_p95=25.091346999943198`
+  - `point_count_baseline=0`
+  - `point_count_all_equal=true`
+  - 当前需要先确认 `point_count_baseline=0` 是否意味着 MEMS/AT128 Python 数据接口与 `ray_cast` 的点数语义不同，不能直接沿用旧 correctness 口径
+- 对 `sensor.lidar.ray_cast_mems + AT128` 做最小 Python 语义探测后已确认：
+  - Python 类型为 `carla.MemsLidarMeasurement`
+  - `len(sample) == 0`
+  - `len(sample.raw_data) == 0`
+  - 但对象暴露了 `get_point_count`、`channels`、`laser_beam_index` 等专用接口
+  - 结论：`ray_cast` 主线沿用的 `len(point_cloud)` correctness 口径不适用于 `MemsLidarMeasurement`，后续必须先改 benchmark 统计逻辑
+- 进一步检查 `RayCastMemsLidar::CreateLasers()` 后已确认：
+  - `ray_cast_mems` 不是直接吃 `"AT128"` 常量
+  - 它会把 `scanning_patterns` 当作内容目录下的文件名直接打开
+  - 因此在 `ray_cast_mems` 路径下，AT128 模式应显式设为 `scanningPattern_AT128.csv`
+  - 独立的 `sensor.lidar.at128` 才更像是吃 `"AT128"` 这类模式名

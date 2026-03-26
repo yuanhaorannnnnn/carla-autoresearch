@@ -60,3 +60,91 @@
   - 独立的 `load_world("Town05")` 也成功
   - 更可能的根因是全自动流程里服务端刚拉起就过早启动 benchmark，客户端在 server ready 之前切图
   - 已修改自动化逻辑：`launch_server()` 不再只等新 pid，而是同时等待 `server.log` 出现 `Initialized CarlaServer` 与 `LoadMap Load map complete`
+- 第二轮 `opt2` 最终验证成功：
+  - 通过自动化 `package` 完成构建
+  - 通过手动接管的服务端/客户端测试链路拿到结果 `runs/test-opt2-20260326-135543/metrics.json`
+  - `point_count_all_equal=true`
+  - `scan_latency_ms_median=38.51826800382696`
+  - 相比第一轮 `opt1` 的 `47.956637004972436` 进一步下降
+- `opt2` 已在 `CarlaUE5` 分支 `feature/carla-lidar-optimization` 提交：
+  - commit: `8d1ef242e`
+  - message: `Optimize lidar angle stepping in semantic raycast loop`
+- 第 3 轮 `opt3` 已实现但尚未验证：
+  - 把 `ShootLaser` 路径从 `FRotator + ComposeRotators + GetForwardVector` 改成 `LocalDirection + FQuat::RotateVector`
+  - 在通道外层预计算 `VertSin/VertCos`
+  - 在每条射线内只计算 yaw 的 `SinCos` 并生成局部方向向量
+- 第 3 轮 `opt3` 完整自动化验证结果：
+  - `runs/opt3-20260326-140120/metrics.json`
+  - `scan_latency_ms_median=37.83054099767469`
+  - `scan_latency_ms_p95=52.081321002333425`
+  - `point_count_baseline=146675`
+  - `point_count_all_equal=false`
+  - 虽然性能比 `opt2` 略好，但 correctness 失守，因此当前应判定为 `opt3 discard`
+- 用户决定切换优化主线：
+  - 保留实现主线在 `RayCastMemsLidar`
+  - 基线模式切到 `AT128`
+  - 不切到独立 `sensor.lidar.at128`
+  - 共享参数尽量沿用当前 `ray_cast` 基线
+- `autoresearch` 控制器与 `benchmark_client.py` 已切换到新的默认测试目标：
+  - `sensor_blueprint = sensor.lidar.ray_cast_mems`
+  - `scanning_patterns = scanningPattern_AT128.csv`
+  - `beams_num = 153600`
+  - 其余共享参数沿用当前基线
+- `opt3` 确认性重跑一度再次进入完整自动化构建，但用户中断后已按要求清理干净残留进程。
+- 切到新主线后，`benchmark_client.py` 与控制器默认值已改成 `ray_cast_mems + AT128`，并通过本地测试与语法检查。
+- 当前最新目标不是继续 `ray_cast`，而是先为 `RayCastMemsLidar + AT128` 建立新基线，再开始这条线上的第一轮优化。
+- 已进一步确认 `ray_cast_mems` 的 `AT128` 基线配置必须使用 `scanningPattern_AT128.csv`，不能直接使用 `"AT128"` 常量；控制器默认值已随之修正。
+- `RayCastMemsLidar + AT128` 新基线已跑出：
+  - `runs/mems-at128-baseline-20260326-151323/metrics.json`
+  - `sensor_blueprint = sensor.lidar.ray_cast_mems`
+  - `scan_latency_ms_median = 16.247665499918185`
+  - `scan_latency_ms_p95 = 25.091346999943198`
+  - `point_count_baseline = 0`
+  - `point_count_all_equal = true`
+  - 需要先解释并确认 `point_count_baseline = 0` 是否是该模型/配置在当前 Python 接口下的预期输出，再决定这条主线上的第一轮优化是否可以继续
+- 在不重新打包、仅修正 `scanning_patterns` 为 `scanningPattern_AT128.csv` 后重新测试：
+  - `runs/mems-at128-test-20260326-155022/metrics.json`
+  - `scan_latency_ms_median = 50.217416000123194`
+  - `scan_latency_ms_p95 = 65.30509999993228`
+  - `point_count_baseline = 121535`
+  - `point_count_all_equal = false`
+  - 结论：`ray_cast_mems + AT128` 这条新主线的点数口径已经不再是 0，说明配置修正生效；但当前仍未达到 run 内点数一致性，尚不能作为稳定新基线
+- 已完成 `MemsLidarMeasurement` 最小语义探测：
+  - Python 类型：`carla.MemsLidarMeasurement`
+  - `len(sample)=0`
+  - `len(sample.raw_data)=0`
+  - 但对象具备 `get_point_count`、`channels`、`laser_beam_index` 等接口
+  - 当前应先把 `benchmark_client.py` 的点数统计逻辑适配到 `MemsLidarMeasurement`，再继续新主线优化
+- 已将 `benchmark_client.py` 扩展为输出 `measured_point_counts`，便于直接查看 100 次点数数组。
+- 当前对 `ray_cast_mems + AT128` 的点数噪声判断已收敛为：
+  - `100` 次里大多数是 `121535`
+  - 存在极少数 `121534`
+  - 用户明确认为这种 `±1` 点噪声可接受
+  - 控制器已将 `sensor.lidar.ray_cast_mems` 的一致性口径放宽为 `±1`
+- `ray_cast_mems + AT128` 第 1 轮优化已实现，待验证：
+  - 在 `RayCastMemsLidar::SimulateLidar` 中把每条射线的 `std::fmod` 浮点取模替换为整数索引预计算和 `%`
+  - 目标是只减少 pattern 遍历里的纯计算开销，不改变数据语义
+- `ray_cast_mems + AT128` 第 1 轮优化验证结果：
+  - `runs/mems-opt1-20260326-155933/metrics.json`
+  - `scan_latency_ms_median = 50.32385449976573`
+  - `point_count_baseline = 121535`
+  - 在新的 `±1` 点容差口径下 `point_count_all_equal = true`
+  - 相比未优化的 `50.217416000123194` 没有提升，当前应判定为 `mems-opt1 discard`
+- `ray_cast_mems + AT128` 第 2 轮优化已实现，待验证：
+  - 把 `SimuMotionDistortion` / `SimNearestDownSample` 的常量分支从每条射线内挪到外层
+  - 只在 motion-distortion 路径中计算位姿插值与 `SingleLerpBodyLoc`
+  - 主路径不再为每个点重复判断 motion-distortion 和 nearest-downsample 两个常量分支
+- `ray_cast_mems + AT128` 第 2 轮优化验证结果：
+  - `runs/mems-opt2-20260326-162547/metrics.json`
+  - `scan_latency_ms_median = 48.598930499792914`
+  - `scan_latency_ms_p95 = 62.76277599954483`
+  - `point_count_baseline = 121535`
+  - 在新的 `±1` 点容差口径下 `point_count_all_equal = true`
+  - 相比未优化基线 `50.217416000123194` 有改善，当前可判定为 `mems-opt2 keep`
+- `ray_cast_mems + AT128` 第 1 轮优化验证结果：
+  - `runs/mems-opt1-20260326-155933/metrics.json`
+  - `scan_latency_ms_median = 50.32385449976573`
+  - `scan_latency_ms_p95 = 65.5246160004026`
+  - `point_count_baseline = 121535`
+  - `point_count_all_equal = true`
+  - 相比未优化的 `runs/mems-at128-test-20260326-155022/metrics.json`（`50.217416000123194 ms`）没有改善，当前应判定为 `mems-opt1 discard`
