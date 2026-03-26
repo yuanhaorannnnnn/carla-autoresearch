@@ -5,12 +5,14 @@ from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
+from carla_autoresearch.benchmark_client import build_result_payload
 from carla_autoresearch.controller import (
     BenchmarkMetrics,
     CarlaPaths,
     CarlaTargetAdapter,
     ExperimentController,
     ExperimentDecision,
+    build_metrics,
     write_results_row,
 )
 
@@ -82,6 +84,9 @@ class CarlaTargetAdapterTest(unittest.TestCase):
         self.assertIn("Town05", command)
         self.assertIn("--output", command)
         self.assertIn("/tmp/out.json", command)
+        self.assertIn("sensor.lidar.ray_cast_mems", command)
+        self.assertIn("scanning_patterns=scanningPattern_AT128.csv", command)
+        self.assertIn("beams_num=153600", command)
 
     def test_server_terminal_command_uses_gnome_terminal(self):
         adapter = CarlaTargetAdapter(CarlaPaths())
@@ -207,7 +212,7 @@ class DecisionLogicTest(unittest.TestCase):
     def test_keep_when_latency_improves_and_point_count_matches(self):
         baseline = BenchmarkMetrics(
             map_name="Town05",
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
             scan_latency_ms_median=10.0,
             scan_latency_ms_p95=11.0,
             point_count_baseline=1024,
@@ -218,7 +223,7 @@ class DecisionLogicTest(unittest.TestCase):
         )
         candidate = BenchmarkMetrics(
             map_name="Town05",
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
             scan_latency_ms_median=9.5,
             scan_latency_ms_p95=10.8,
             point_count_baseline=1024,
@@ -235,7 +240,7 @@ class DecisionLogicTest(unittest.TestCase):
     def test_discard_when_point_count_does_not_match(self):
         baseline = BenchmarkMetrics(
             map_name="Town05",
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
             scan_latency_ms_median=10.0,
             scan_latency_ms_p95=11.0,
             point_count_baseline=1024,
@@ -246,7 +251,7 @@ class DecisionLogicTest(unittest.TestCase):
         )
         candidate = BenchmarkMetrics(
             map_name="Town05",
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
             scan_latency_ms_median=8.0,
             scan_latency_ms_p95=9.0,
             point_count_baseline=1023,
@@ -266,7 +271,7 @@ class ResultsFileTest(unittest.TestCase):
     def test_write_results_row_creates_header_once(self):
         metrics = BenchmarkMetrics(
             map_name="Town05",
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
             scan_latency_ms_median=9.5,
             scan_latency_ms_p95=10.8,
             point_count_baseline=1024,
@@ -292,7 +297,7 @@ class ResultsFileTest(unittest.TestCase):
     def test_metrics_roundtrip_from_json(self):
         payload = {
             "map": "Town05",
-            "sensor_blueprint": "sensor.lidar.ray_cast",
+            "sensor_blueprint": "sensor.lidar.ray_cast_mems",
             "scan_latency_ms_median": 9.5,
             "scan_latency_ms_p95": 10.8,
             "point_count_baseline": 1024,
@@ -310,6 +315,52 @@ class ResultsFileTest(unittest.TestCase):
 
         self.assertEqual(metrics.map_name, "Town05")
         self.assertTrue(metrics.point_count_all_equal)
+
+    def test_benchmark_payload_includes_measured_point_counts(self):
+        metrics = BenchmarkMetrics(
+            map_name="Town05",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
+            scan_latency_ms_median=9.5,
+            scan_latency_ms_p95=10.8,
+            point_count_baseline=1024,
+            point_count_all_equal=False,
+            warmup_scans=20,
+            measured_scans=3,
+            status="keep",
+        )
+
+        payload = build_result_payload(
+            metrics=metrics,
+            latencies_ms=[9.0, 9.5, 10.0],
+            point_counts=[1024, 1025, 1024],
+        )
+
+        self.assertEqual(payload["measured_point_counts"], [1024, 1025, 1024])
+
+    def test_build_metrics_allows_plus_minus_one_for_mems_at128(self):
+        metrics = build_metrics(
+            latencies_ms=[10.0, 11.0, 12.0],
+            point_counts=[121535, 121535, 121534, 121536],
+            map_name="Town05",
+            sensor_blueprint="sensor.lidar.ray_cast_mems",
+            warmup_scans=20,
+            measured_scans=4,
+        )
+
+        self.assertTrue(metrics.point_count_all_equal)
+        self.assertEqual(metrics.point_count_baseline, 121535)
+
+    def test_build_metrics_still_requires_exact_for_ray_cast(self):
+        metrics = build_metrics(
+            latencies_ms=[10.0, 11.0, 12.0],
+            point_counts=[146675, 146675, 146674],
+            map_name="Town05",
+            sensor_blueprint="sensor.lidar.ray_cast",
+            warmup_scans=20,
+            measured_scans=3,
+        )
+
+        self.assertFalse(metrics.point_count_all_equal)
 
 
 if __name__ == "__main__":

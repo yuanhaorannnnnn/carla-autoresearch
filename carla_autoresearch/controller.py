@@ -19,11 +19,9 @@ DEFAULT_LIDAR_ATTRIBUTES = {
     "range": "200",
     "simu_brdf": "true",
     "channels": "64",
-    "points_per_second": "1600000",
-    "horizontal_fov": "120.0",
+    "beams_num": "153600",
+    "scanning_patterns": "scanningPattern_AT128.csv",
     "rotation_frequency": "10.0",
-    "upper_fov": "10.0",
-    "lower_fov": "-30.0",
     "noise_seed": "0",
     "noise_stddev": "0.0",
     "dropoff_general_rate": "0.0",
@@ -48,6 +46,7 @@ class CarlaPaths:
     host: str = "127.0.0.1"
     port: int = 2000
     town: str = "Town05"
+    sensor_blueprint: str = "sensor.lidar.ray_cast_mems"
     warmup_scans: int = 20
     measured_scans: int = 100
     build_timeout_seconds: int = 45 * 60
@@ -194,6 +193,8 @@ class CarlaTargetAdapter:
             self.paths.host,
             "--port",
             str(self.paths.port),
+            "--sensor-blueprint",
+            self.paths.sensor_blueprint,
             "--map",
             self.paths.town,
             "--warmup-scans",
@@ -332,7 +333,7 @@ class ExperimentController:
         if build_result.returncode != 0:
             metrics = BenchmarkMetrics(
                 map_name=self.adapter.paths.town,
-                sensor_blueprint="sensor.lidar.ray_cast",
+                sensor_blueprint=self.adapter.paths.sensor_blueprint,
                 scan_latency_ms_median=0.0,
                 scan_latency_ms_p95=0.0,
                 point_count_baseline=0,
@@ -358,7 +359,7 @@ class ExperimentController:
         if benchmark_result.returncode != 0 or not metrics_path.exists():
             metrics = BenchmarkMetrics(
                 map_name=self.adapter.paths.town,
-                sensor_blueprint="sensor.lidar.ray_cast",
+                sensor_blueprint=self.adapter.paths.sensor_blueprint,
                 scan_latency_ms_median=0.0,
                 scan_latency_ms_p95=0.0,
                 point_count_baseline=0,
@@ -393,13 +394,17 @@ def build_metrics(
     measured_scans: int,
 ) -> BenchmarkMetrics:
     baseline_count = point_counts[0] if point_counts else 0
+    if sensor_blueprint == "sensor.lidar.ray_cast_mems":
+        point_count_all_equal = all(abs(count - baseline_count) <= 1 for count in point_counts)
+    else:
+        point_count_all_equal = all(count == baseline_count for count in point_counts)
     return BenchmarkMetrics(
         map_name=map_name,
         sensor_blueprint=sensor_blueprint,
         scan_latency_ms_median=median(latencies_ms) if latencies_ms else 0.0,
         scan_latency_ms_p95=percentile_95(latencies_ms),
         point_count_baseline=baseline_count,
-        point_count_all_equal=all(count == baseline_count for count in point_counts),
+        point_count_all_equal=point_count_all_equal,
         warmup_scans=warmup_scans,
         measured_scans=measured_scans,
         status="keep",

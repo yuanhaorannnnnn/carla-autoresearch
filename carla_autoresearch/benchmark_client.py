@@ -14,6 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a fixed CARLA LiDAR benchmark.")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=2000)
+    parser.add_argument("--sensor-blueprint", default="sensor.lidar.ray_cast_mems")
     parser.add_argument("--map", dest="map_name", default="Town05")
     parser.add_argument("--warmup-scans", type=int, default=20)
     parser.add_argument("--measured-scans", type=int, default=100)
@@ -58,6 +59,26 @@ def pick_vehicle_blueprint(blueprints):
     return vehicles[0]
 
 
+def build_result_payload(
+    metrics,
+    latencies_ms: list[float],
+    point_counts: list[int],
+) -> dict[str, object]:
+    return {
+        "map": metrics.map_name,
+        "sensor_blueprint": metrics.sensor_blueprint,
+        "scan_latency_ms_median": metrics.scan_latency_ms_median,
+        "scan_latency_ms_p95": metrics.scan_latency_ms_p95,
+        "point_count_baseline": metrics.point_count_baseline,
+        "point_count_all_equal": metrics.point_count_all_equal,
+        "measured_point_counts": point_counts,
+        "warmup_scans": metrics.warmup_scans,
+        "measured_scans": metrics.measured_scans,
+        "status": metrics.status,
+        "scan_latency_ms_mean": statistics.fmean(latencies_ms),
+    }
+
+
 def benchmark(args: argparse.Namespace) -> dict[str, object]:
     carla = import_carla()
     client = carla.Client(args.host, args.port)
@@ -83,7 +104,7 @@ def benchmark(args: argparse.Namespace) -> dict[str, object]:
         vehicle = world.spawn_actor(vehicle_bp, spawn_points[0])
         vehicle.set_simulate_physics(False)
 
-        lidar_bp = blueprint_library.find("sensor.lidar.ray_cast")
+        lidar_bp = blueprint_library.find(args.sensor_blueprint)
         for key, value in parse_lidar_attributes(args.lidar_attr).items():
             lidar_bp.set_attribute(key, value)
         lidar_transform = carla.Transform(carla.Location(x=0.0, z=2.5))
@@ -114,22 +135,11 @@ def benchmark(args: argparse.Namespace) -> dict[str, object]:
             latencies_ms=latencies_ms,
             point_counts=point_counts,
             map_name=args.map_name,
-            sensor_blueprint="sensor.lidar.ray_cast",
+            sensor_blueprint=args.sensor_blueprint,
             warmup_scans=args.warmup_scans,
             measured_scans=args.measured_scans,
         )
-        return {
-            "map": metrics.map_name,
-            "sensor_blueprint": metrics.sensor_blueprint,
-            "scan_latency_ms_median": metrics.scan_latency_ms_median,
-            "scan_latency_ms_p95": metrics.scan_latency_ms_p95,
-            "point_count_baseline": metrics.point_count_baseline,
-            "point_count_all_equal": metrics.point_count_all_equal,
-            "warmup_scans": metrics.warmup_scans,
-            "measured_scans": metrics.measured_scans,
-            "status": metrics.status,
-            "scan_latency_ms_mean": statistics.fmean(latencies_ms),
-        }
+        return build_result_payload(metrics, latencies_ms, point_counts)
     finally:
         if lidar is not None:
             lidar.stop()
