@@ -8,7 +8,9 @@ from carla_autoresearch.controller import (
     CarlaPaths,
     CarlaTargetAdapter,
     ExperimentController,
+    HeadlessBuildAdapter,
     write_results_row,
+    write_status_file,
 )
 
 
@@ -52,12 +54,27 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Reuse an already running CarlaServer instead of launching a new one",
     )
+    parser.add_argument(
+        "--status-file",
+        type=Path,
+        default=None,
+        help="Write completion status JSON to this path on finish",
+    )
+    parser.add_argument(
+        "--headless-build",
+        action="store_true",
+        help="Run build directly in subprocess instead of gnome-terminal",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    adapter = CarlaTargetAdapter(CarlaPaths())
+    paths = CarlaPaths()
+    if args.headless_build:
+        adapter = HeadlessBuildAdapter(paths)
+    else:
+        adapter = CarlaTargetAdapter(paths)
     controller = ExperimentController(adapter)
     metrics, decision = controller.run_once(
         workspace=args.workspace,
@@ -73,6 +90,14 @@ def main() -> None:
         status=decision.status,
         description=args.description,
     )
+    if args.status_file:
+        write_status_file(
+            path=args.status_file,
+            state="success" if decision.status == "keep" else decision.status,
+            reason=decision.reason,
+            metrics_path=str(metrics_path),
+            latency_ms=metrics.scan_latency_ms_median,
+        )
     print(f"status: {decision.status}")
     print(f"reason: {decision.reason}")
     print(f"metrics: {metrics_path}")

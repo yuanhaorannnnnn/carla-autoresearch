@@ -75,7 +75,7 @@ class BenchmarkMetrics:
             scan_latency_ms_median=float(payload["scan_latency_ms_median"]),
             scan_latency_ms_p95=float(payload["scan_latency_ms_p95"]),
             point_count_baseline=int(payload["point_count_baseline"]),
-            point_count_all_equal=bool(payload["point_count_all_equal"]),
+            point_count_all_equal=str(payload["point_count_all_equal"]).lower() in ("true", "1", "yes"),
             warmup_scans=int(payload["warmup_scans"]),
             measured_scans=int(payload["measured_scans"]),
             status=payload["status"],
@@ -101,6 +101,24 @@ class ExperimentDecision:
         if candidate.scan_latency_ms_median < baseline.scan_latency_ms_median:
             return DecisionResult("keep", "median latency improved")
         return DecisionResult("discard", "median latency did not improve")
+
+
+class ExperimentDecisionExtended(ExperimentDecision):
+    @staticmethod
+    def compare_extended(
+        baseline: BenchmarkMetrics,
+        candidate: BenchmarkMetrics,
+        metric: str = "scan_latency_ms_median",
+    ) -> DecisionResult:
+        if not candidate.point_count_all_equal:
+            return DecisionResult("discard", "point count mismatch across scans")
+        if candidate.point_count_baseline != baseline.point_count_baseline:
+            return DecisionResult("discard", "point count baseline changed")
+        baseline_value = getattr(baseline, metric, baseline.scan_latency_ms_median)
+        candidate_value = getattr(candidate, metric, candidate.scan_latency_ms_median)
+        if candidate_value < baseline_value:
+            return DecisionResult("keep", f"{metric} improved")
+        return DecisionResult("discard", f"{metric} did not improve")
 
 
 class CarlaTargetAdapter:
@@ -313,6 +331,21 @@ class CarlaTargetAdapter:
         )
 
 
+class HeadlessBuildAdapter(CarlaTargetAdapter):
+    """Runs build directly in subprocess without gnome-terminal."""
+
+    def run_build_headless(self, log_path: Path) -> subprocess.CompletedProcess[str]:
+        cmd = [
+            "bash", "-lc",
+            f"source {shlex.quote(str(self.paths.conda_sh_path))} && "
+            f"conda activate {shlex.quote(self.paths.client_conda_env)} && "
+            f"cd {shlex.quote(str(self.paths.project_dir))} && "
+            f"bash ./package.sh"
+        ]
+        with open(log_path, "w") as log_f:
+            return subprocess.run(cmd, stdout=log_f, stderr=subprocess.STDOUT)
+
+
 class ExperimentController:
     def __init__(self, adapter: CarlaTargetAdapter):
         self.adapter = adapter
@@ -436,3 +469,19 @@ def write_results_row(
         )
     )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_status_file(path: Path, state: str, reason: str = "", **extra) -> None:
+    """Write JSON status file for external runner coordination."""
+    payload = {"state": state, "reason": reason, **extra}
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def read_status_file(path: Path) -> dict | None:
+    """Read status file if present and valid."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None

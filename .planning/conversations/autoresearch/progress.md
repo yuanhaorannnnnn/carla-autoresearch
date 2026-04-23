@@ -190,3 +190,38 @@
   - 且 `point_count_baseline` 从 `121535` 变为 `121537`，不满足当前 compare 口径
   - 因此本轮应判定为 `mems-opt3 discard`
 - benchmark 完成后已停止本轮测试启动的 `CarlaServer`
+
+## 2026-04-23
+
+- 开始实施 `autoresearch-loop` skill，将手动 benchmark 工作流升级为监督式自动优化闭环
+- Step 1 完成：`controller.py` 添加三个组件
+  - `HeadlessBuildAdapter`：直接在 subprocess 中运行 `package.sh`，不弹 gnome-terminal
+  - `write_status_file` / `read_status_file`：JSON 状态文件 I/O，用于外部 runner 协调
+  - `ExperimentDecisionExtended`：支持可配置主指标（默认 `scan_latency_ms_median`）
+  - 修复 `BenchmarkMetrics.from_json` 对字符串 `"false"` 的布尔解析 bug
+  - 验证通过（8 个检查点全部 pass）
+- Step 2 完成：`experiment.py` 添加 `--status-file` 和 `--headless-build` CLI flags
+  - `--status-file`：实验完成后写入 JSON 状态（state, reason, metrics_path, latency_ms）
+  - `--headless-build`：启用时实例化 `HeadlessBuildAdapter`，否则保持原有 `CarlaTargetAdapter`
+  - 现有代码路径完全不受影响
+- Step 3 完成：创建 `external_runner.sh`
+  - 自包含 bash 脚本，在 gnome-terminal 中异步运行
+  - 流程：starting_server → running_benchmark → success/failed
+  - 包含 server 启动等待（60s）、benchmark 超时（180s）、server 清理
+- Step 4 完成：创建 `loop.py`
+  - `LoopState` Enum：8 个状态
+  - `LoopStateData` dataclass：完整状态结构
+  - `AutoresearchLoop` 核心类：save/load、run_build、launch_benchmark_external、poll_benchmark_status、decide、should_terminate
+  - CLI 子命令：init、add-hypotheses、build、benchmark-launch、benchmark-poll、decide、status
+  - 状态持久化到 `.agent-state/autoresearch-loop-state.yaml`
+  - init + add-hypotheses + status 端到端验证通过
+- Step 5 完成：创建 `autoresearch-loop/SKILL.md`
+  - 项目级 skill，原始文件在 `~/.agents/repos/agent-skills/skills/autoresearch-loop/`
+  - 软链接：`/media/yhr/2T/autoresearch/.claude/skills/autoresearch-loop -> agent-skills/skills/autoresearch-loop`
+  - SKILL.md 314 行，覆盖 Phase 1-3 工作流、状态机、CLI 命令、错误处理
+- Step 6 完成：添加 `tests/test_loop.py`
+  - 22 个测试全部通过
+  - 覆盖：状态序列化、init、终止条件、结果记录、假设队列、决策逻辑、摘要、status file I/O
+  - 现有 `test_carla_controller.py` 19 个测试全部通过，无回归
+- 文档更新：`README.md`、`program.md` 已更新，反映自动 loop 模式
+- Step 7（Validation）已暂停，等待用户查看文档后决定验证策略
