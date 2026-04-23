@@ -24,3 +24,13 @@ dev/
 results.tsv
 
 runs/
+
+# Runtime state (per-session, not code)
+.agent-state/
+.claude/
+
+# Temporary artifacts
+*.tmp
+*.bak
+report-slides.html
+verify_step*.py
