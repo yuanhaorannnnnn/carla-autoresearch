@@ -148,3 +148,45 @@
   - `point_count_baseline = 121535`
   - `point_count_all_equal = true`
   - 相比未优化的 `runs/mems-at128-test-20260326-155022/metrics.json`（`50.217416000123194 ms`）没有改善，当前应判定为 `mems-opt1 discard`
+
+## 2026-04-10
+
+- 在 `CarlaUE5` 分支 `feature/carla-lidar-optimization` 上确认：
+  - `mems-opt2` 已提交为 `bba122daee2cffdec8f8f8017e3c4be365cf2d16`
+  - commit message: `Optimize mems lidar branch hoisting in scan loop`
+- 为 `ray_cast_mems + AT128` 开始下一轮优化实现，当前候选点选择为：
+  - 移除 `RayCastMemsLidar::SimulateLidar` 中对 `RayPreprocessCondition` 的空转路径依赖
+  - 删除每帧 `PreprocessRays(...)` 调用
+  - 删除只会填充全 `true` 的 `RayPreprocessCondition` 成员与实现
+  - 删除每点 `ChannelPreprocess[idxPtsOneLaser]` 判断
+- 本轮优化当前状态：
+  - 代码已实现，修改文件为 `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Sensor/RayCastMemsLidar.{h,cpp}`
+  - 已通过 `git diff --check`
+  - 随后已启动正式实验目录 `runs/mems-opt3-preprocess-bypass-20260410`
+  - 用户在实验进行中主动要求停止，本轮已终止相关进程
+  - 停止时 `build.exitcode = 143`，说明流程被外部终止而非自然完成
+  - 停止点位于 `BuildCookRun` 阶段，尚未进入 `server.log` / `client.log` / `metrics.json` 产出阶段
+  - 因此当前仍只可视为 `implemented, pending validation`
+
+## 2026-04-13
+
+- 用户已手动完成 `package`，本轮未重复执行 `build`，而是直接：
+  - 启动打包后的 `CarlaUnreal.sh`
+  - 等待 `Initialized CarlaServer` 与 `LoadMap Load map complete`
+  - 通过正式入口 `python3 -m carla_autoresearch.benchmark_client` 在 `py38` 中完成 benchmark
+- `ray_cast_mems + AT128` 第 3 轮优化（移除 `RayPreprocessCondition` 空转路径）验证结果：
+  - run: `runs/mems-opt3-preprocess-bypass-20260413/metrics.json`
+  - commit: `35340e095`
+  - `scan_latency_ms_median = 49.62767148390412`
+  - `scan_latency_ms_p95 = 59.543716022744775`
+  - `point_count_baseline = 121537`
+  - 在新的 `±1` 点容差口径下 `point_count_all_equal = true`
+- 与当前基线 `runs/mems-opt2-20260326-162547/metrics.json` 对比：
+  - 基线 median: `48.598930499792914`
+  - 基线 p95: `62.76277599954483`
+  - 基线 `point_count_baseline = 121535`
+- 结论：
+  - 虽然 `p95` 更低，但 `median` 变差
+  - 且 `point_count_baseline` 从 `121535` 变为 `121537`，不满足当前 compare 口径
+  - 因此本轮应判定为 `mems-opt3 discard`
+- benchmark 完成后已停止本轮测试启动的 `CarlaServer`
