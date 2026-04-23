@@ -284,6 +284,40 @@ class AutoresearchLoop:
             "no_improvement_streak": self.data.termination.no_improvement_streak,
         }
 
+    def write_planning_summary(self, planning_path: Path | None = None) -> None:
+        """Append loop summary to .planning progress.md on termination."""
+        if planning_path is None:
+            repo_root = Path(__file__).parent.parent
+            planning_path = repo_root / ".planning" / "conversations" / "autoresearch" / "progress.md"
+
+        keep_count = sum(1 for h in self.data.hypotheses if h.result == "keep")
+        discard_count = sum(1 for h in self.data.hypotheses if h.result == "discard")
+        crash_count = sum(1 for h in self.data.hypotheses if h.result == "crash")
+
+        lines = [
+            "",
+            f"## {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
+            "",
+            f"- `{self.data.loop_id}` loop terminated: `{self.data.state}`",
+            f"  - rounds executed: {self.data.current.round}",
+            f"  - baseline: `{self.data.baseline.latency_ms:.6f} ms` @ `{self.data.baseline.commit}`",
+            f"  - best: `{self.data.best.latency_ms:.6f} ms` @ `{self.data.best.commit}` (round {self.data.best.round})",
+            f"  - results: keep={keep_count}, discard={discard_count}, crash={crash_count}",
+        ]
+
+        if self.data.hypotheses:
+            lines.append("  - hypothesis details:")
+            for h in self.data.hypotheses:
+                status = h.result or h.status
+                commit = f" @ `{h.commit_hash}`" if h.commit_hash else ""
+                lines.append(f"    - `{h.id}`: {status}{commit} — {h.description}")
+
+        if self.data.termination.reason:
+            lines.append(f"  - termination reason: {self.data.termination.reason}")
+
+        with open(planning_path, "a", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+
 
 def _deserialize_state(raw: dict) -> LoopStateData:
     """Reconstruct LoopStateData from deserialized YAML dict."""
@@ -380,6 +414,20 @@ def cmd_add_hypotheses(args: argparse.Namespace) -> None:
     print(json.dumps({"added": len(hypotheses), "total": len(loop.data.hypotheses)}, indent=2))
 
 
+def cmd_terminate(args: argparse.Namespace) -> None:
+    loop = AutoresearchLoop.load()
+    loop.data.state = LoopState.TERMINATED.value
+    if args.reason:
+        loop.data.termination.reason = args.reason
+    loop.save()
+    loop.write_planning_summary()
+    print(json.dumps({
+        "terminated": True,
+        "summary": loop.to_summary(),
+        "planning_updated": True,
+    }, indent=2))
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Autoresearch loop controller")
     subparsers = parser.add_subparsers(dest="action", required=True)
@@ -424,6 +472,11 @@ def parse_args() -> argparse.Namespace:
     p_hypo = subparsers.add_parser("add-hypotheses", help="Add hypothesis queue")
     p_hypo.add_argument("--hypotheses", required=True, help='Format: "h1:desc1:dim1;h2:desc2:dim2"')
     p_hypo.set_defaults(func=cmd_add_hypotheses)
+
+    # terminate
+    p_term = subparsers.add_parser("terminate", help="Terminate loop and write planning summary")
+    p_term.add_argument("--reason", default=None, help="Termination reason")
+    p_term.set_defaults(func=cmd_terminate)
 
     return parser.parse_args()
 

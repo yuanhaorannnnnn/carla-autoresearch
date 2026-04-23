@@ -289,6 +289,43 @@ class SummaryTest(unittest.TestCase):
         self.assertEqual(summary["tested_hypotheses"], 1)
 
 
+class PlanningSummaryTest(unittest.TestCase):
+    def test_write_planning_summary_appends_to_progress_md(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            planning_path = Path(tmpdir) / "progress.md"
+            planning_path.write_text("# Progress\n", encoding="utf-8")
+
+            loop = _make_test_loop()
+            loop.data.hypotheses = [
+                Hypothesis(id="h1", description="batch rays", target_file="a.cpp", dimension="model-logic", status="tested", result="discard", commit_hash="abc1234"),
+                Hypothesis(id="h2", description="reduce atomics", target_file="b.cpp", dimension="model-logic", status="tested", result="keep", commit_hash="def5678"),
+            ]
+            loop.data.termination.reason = "max_rounds reached"
+
+            loop.write_planning_summary(planning_path)
+
+            content = planning_path.read_text(encoding="utf-8")
+            self.assertIn("loop terminated", content)
+            self.assertIn("baseline:", content)
+            self.assertIn("best:", content)
+            self.assertIn("keep=1, discard=1, crash=0", content)
+            self.assertIn("`h1`: discard @ `abc1234`", content)
+            self.assertIn("`h2`: keep @ `def5678`", content)
+            self.assertIn("termination reason: max_rounds reached", content)
+
+    def test_write_planning_summary_with_empty_hypotheses(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            planning_path = Path(tmpdir) / "progress.md"
+            planning_path.write_text("# Progress\n", encoding="utf-8")
+
+            loop = _make_test_loop()
+            loop.write_planning_summary(planning_path)
+
+            content = planning_path.read_text(encoding="utf-8")
+            self.assertIn("loop terminated", content)
+            self.assertIn("keep=0, discard=0, crash=0", content)
+
+
 class StatusFileTest(unittest.TestCase):
     def test_write_and_read_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmpdir:
