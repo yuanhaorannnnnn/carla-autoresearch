@@ -9,13 +9,13 @@ wheels/
 # Virtual environments
 .venv
 worktrees/
+.worktrees/
 results/
 queue/
 runs/
 
 # Agent prompt files (generated per-session by launchers)
 CLAUDE.md
-AGENTS.md
 
 # Experimental code/artifacts
 dev/
@@ -34,3 +34,14 @@ runs/
 *.bak
 report-slides.html
 verify_step*.py
+.pytest_cache/
+.local/
+
+# Local authoring context and private migration copies
+AGENTS.md
+.agents/
+.proposal/
+.planning/
+.research/
+docs/migration/
+legacy/carla-v0/agent-system/

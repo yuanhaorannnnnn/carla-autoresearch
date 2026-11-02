@@ -1,0 +1,11 @@
+{
+  "recipe": {
+    "map": "Town05",
+    "vehicle_blueprint": "vehicle.lincoln.mkz",
+    "sensor_blueprint": "sensor.camera.rgb",
+    "sensor_attributes": {"image_size_x": "640", "image_size_y": "360", "fov": "90"},
+    "frames": 5,
+    "warmup_frames": 3,
+    "fixed_delta_seconds": 0.05
+  }
+}

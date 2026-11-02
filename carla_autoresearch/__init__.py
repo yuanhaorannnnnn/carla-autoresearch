@@ -1,2 +1,1 @@
-"""CARLA ray-cast LiDAR experiment controller."""
-
+"""Compatibility entrypoints; historical implementation is in legacy/carla-v0."""

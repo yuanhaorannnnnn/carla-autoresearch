@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "scope": "read-only forward exercises; no simulator and no fake runtime success",
+  "cases": [
+    {
+      "id": "dvs-no-callback",
+      "request": "DVS 连续20帧没回调，能说是正常空事件吗？只解释现有结果，不要再跑。",
+      "fixtures": {
+        "world_frames": [
+          100,
+          120
+        ],
+        "callbacks": 0,
+        "listener_alive": true,
+        "stream_delivery_verified": false
+      }
+    },
+    {
+      "id": "mems-capture-boundary",
+      "request": "我已经配好 custom-mems profile，能直接把 MEMS 填进 capture.run 吗？先核对能力，不启动。",
+      "fixtures": {
+        "capability_profile": "custom-mems",
+        "blueprint": "sensor.lidar.ray_cast_mems"
+      }
+    },
+    {
+      "id": "single-light-freeze",
+      "request": "sprint42 只冻结路口这一盏灯，其他灯不能变。给我准确操作，不执行。",
+      "fixtures": {
+        "traffic_light_id": 42,
+        "preserve_other_lights": true
+      }
+    },
+    {
+      "id": "usd-condition",
+      "request": "这个 sprint42 checkout 能直接用 USD 导入车辆吗？检查路径即可，不构建。",
+      "fixtures": {
+        "source_baseline": "sprint42@2075f526dec86362fe058a6fff939e6832876759",
+        "build_verified": false
+      }
+    },
+    {
+      "id": "control-ownership",
+      "request": "vehicle.control 提示 actor_not_owned，车辆ID我知道，你能绕过CLI直接Python控制它吗？",
+      "fixtures": {
+        "actor_id": 9,
+        "error": "actor_not_owned",
+        "active_cli_session": true
+      }
+    },
+    {
+      "id": "dataset-episode-join",
+      "request": "把这两份同帧号图像和点云配起来做训练集，先判断能不能直接按frame关联。",
+      "fixtures": {
+        "image": {
+          "episode": 7,
+          "frame": 100
+        },
+        "lidar": {
+          "episode": 8,
+          "frame": 100
+        }
+      }
+    }
+  ]
+}

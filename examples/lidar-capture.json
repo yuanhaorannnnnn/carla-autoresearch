@@ -1,0 +1,11 @@
+{
+  "recipe": {
+    "map": "Town05",
+    "vehicle_blueprint": "vehicle.lincoln.mkz",
+    "sensor_blueprint": "sensor.lidar.ray_cast",
+    "sensor_attributes": {"channels": "32", "range": "50", "points_per_second": "20000", "rotation_frequency": "20"},
+    "frames": 10,
+    "warmup_frames": 2,
+    "fixed_delta_seconds": 0.05
+  }
+}
