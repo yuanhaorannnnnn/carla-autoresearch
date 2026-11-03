@@ -63,11 +63,11 @@ Use explicit lidar attributes instead of relying on blueprint defaults.
      `pip install /media/yhr/2T/CarlaUE5/Build/PythonAPI/dist/carla-0.10.0-cp38-cp38-linux_x86_64.whl --force-reinstall`
    - only then launch the client script
 
-### Mode B: Automated Loop (autoresearch-loop skill)
+### Mode B: Automated Loop (coding agent + loop.py)
 
-The automated loop is driven by the `autoresearch-loop` skill. The skill handles
-hypothesis generation, patch application, build coordination, benchmark polling,
-and keep/discard decisions. The mechanical layer is `loop.py`.
+The automated loop is driven by a coding agent following this program. The agent
+handles hypothesis generation, patch application, build coordination, benchmark
+polling, and keep/discard decisions. The mechanical layer is `loop.py`.
 
 ```
 [INIT]

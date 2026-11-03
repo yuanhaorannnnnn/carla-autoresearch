@@ -7,7 +7,7 @@
 当前实现支持两种工作模式：
 
 1. **手动单轮实验**（`experiment.py`）：一次 build + benchmark + decision
-2. **自动优化闭环**（`autoresearch-loop` skill）：AI 生成假设 → 自动 patch → build → benchmark → keep/discard → 迭代
+2. **自动优化闭环**（coding agent + `loop.py`）：AI 生成假设 → 自动 patch → build → benchmark → keep/discard → 迭代
 
 两种模式共享同一套底层组件（build adapter、benchmark client、decision logic）。
 
@@ -18,7 +18,7 @@
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  autoresearch-loop skill (AI layer)                                      │
+│  coding agent (AI layer)                                                 │
 │  - Analyzes target code, generates hypothesis queue                      │
 │  - Applies patches with Write/Edit tools                                 │
 │  - Coordinates loop via loop.py CLI actions                              │
@@ -66,7 +66,6 @@ carla_autoresearch/experiment.py         - one-shot experiment entrypoint (--hea
 carla_autoresearch/loop.py               - state machine, loop controller, CLI for
                                            init/build/benchmark-launch/benchmark-poll/decide/status
 carla_autoresearch/external_runner.sh    - async server+benchmark launcher (gnome-terminal)
-.claude/skills/autoresearch-loop/        - skill definition (symlink to agent-skills repo)
 program.md                               - agent instructions for this CARLA workflow
 tests/test_carla_controller.py           - controller-level tests
 tests/test_loop.py                       - loop state machine and decision tests
@@ -105,9 +104,9 @@ python3 -m carla_autoresearch.experiment \
   --description "candidate change"
 ```
 
-### Automated Loop (autoresearch-loop skill)
+### Automated Loop (coding agent + loop.py)
 
-触发词：`/autoresearch-loop` 或自然语言请求自动优化循环。
+触发方式：自然语言请求自动优化循环；agent 按本仓库 `program.md` + `loop.py` 执行。
 
 Loop CLI 命令参考：
 
