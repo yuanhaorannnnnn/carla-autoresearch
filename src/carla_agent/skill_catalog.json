@@ -1,0 +1,1145 @@
+{
+  "schema_version": 1,
+  "baseline": "sprint42@2075f526dec86362fe058a6fff939e6832876759",
+  "skills": [
+    {
+      "name": "carla-ackermann-control",
+      "description": "对 CARLA 自有车辆应用 Ackermann 转角、速度、加速度、jerk 与横纵分控，配置速度/加速度 PID；不把归一化方向盘输入当 Ackermann 转角。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-ackermann-control/SKILL.md",
+      "sha256": "8c672f964ca68519b0d05425419a58ad0102f7ba603c8654c1d074ef09864722"
+    },
+    {
+      "name": "carla-actor-batch",
+      "description": "使用 CARLA apply_batch/apply_batch_sync、SpawnActor.then 和 FutureActor，逐项处理 Response/error；用于独立原生任务批处理，不把批操作当原子事务。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-actor-batch/SKILL.md",
+      "sha256": "4ab17f097d4a047575954f8c0b4b09696e83fc52c1507e8d06fcc04fdec4337f"
+    },
+    {
+      "name": "carla-actor-extension",
+      "description": "扩展 CARLA actor factory 参数、definition cache 和新 actor 接线；用于开发新类型，既有 vehicle/prop 注册走专用资产 skill。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-actor-extension/SKILL.md",
+      "sha256": "ed55c18c5b318bac502314b4423c3232917323564310a22639512a4c191ffdb4"
+    },
+    {
+      "name": "carla-actor-motion",
+      "description": "读取 CARLA actor transform、速度与加速度，设置目标运动、恒速/恒加速度、力冲量以及重力/碰撞/物理开关；车辆动力学参数交 vehicle-physics。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [
+        "actors.inspect"
+      ],
+      "file": "skills/carla-actor-motion/SKILL.md",
+      "sha256": "f0d2f2b21184786e6178436de9ff84cbac0e592918952dfe9954fe9641f6bc8d"
+    },
+    {
+      "name": "carla-actors",
+      "description": "查询 CARLA actor 身份与 alive/active/dormant，在自有 CLI session 中生成和销毁 actor；原生 parent/attachment 仅用于独立原生生命周期。控制与运动交专项。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "actors.destroy",
+        "actors.inspect",
+        "actors.list",
+        "actors.spawn"
+      ],
+      "file": "skills/carla-actors/SKILL.md",
+      "sha256": "fc698cf760627459bbd2462803f14e42042e44048dd938a3e6b7cee908c2e44c"
+    },
+    {
+      "name": "carla-benchmark",
+      "description": "在固定 CARLA workload 下执行基准或候选测量，保留配置、原始帧和观测口径；baseline/candidate 是试验角色，不自动搜索参数或宣布最优结果。",
+      "category": "research",
+      "execution": "workflow",
+      "cli_operations": [
+        "capture.run",
+        "research.status"
+      ],
+      "file": "skills/carla-benchmark/SKILL.md",
+      "sha256": "0ff65506097634f131dad79ca962c866a811707f9e547d30e31b84bac5249a23"
+    },
+    {
+      "name": "carla-blueprint-reparent",
+      "description": "修复指定目录内 Blueprint 或 AnimBlueprint 的 parent class；仅处理明确父类与命名范围，不扫描修复整个工程。",
+      "category": "engineering",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-blueprint-reparent/SKILL.md",
+      "sha256": "0cd38e71bd76203ae36512349ede72a6cf0e5e2c915d1554505dbb5645f1f2e4"
+    },
+    {
+      "name": "carla-blueprints",
+      "description": "筛选 CARLA ActorBlueprint，读取属性类型、推荐值、可修改性并构造合法生成属性；用于蓝图发现和参数校验，不制作 UE Blueprint 或解释各 sensor 物理模型。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "blueprints.list"
+      ],
+      "file": "skills/carla-blueprints/SKILL.md",
+      "sha256": "98b8aa3a6fa294f1c231c87d9c12d79e7e15864b06ab08672c783ecc447df600"
+    },
+    {
+      "name": "carla-build-configure",
+      "description": "生成或诊断 CARLA 的 CMake 配置、toolchain、Python 和 feature flags；仅配置，不自动编译、安装或启动。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-build-configure/SKILL.md",
+      "sha256": "4216238d251d91077fba7cccd9fd619e5b5b939023158cb45aa19ae30b98249f"
+    },
+    {
+      "name": "carla-build-editor",
+      "description": "仅在用户明确要求编译 CARLA Editor 或运行 lunch.sh 时构建 CarlaUnrealEditor；启动已有 Editor 走 carla-editor-launch。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-build-editor/SKILL.md",
+      "sha256": "fd4869a1b4333ce2171a308d01958dd0001599fe56f093b98cde671b734c4006"
+    },
+    {
+      "name": "carla-build-libcarla",
+      "description": "按已确认 CMake 配置构建 CARLA C++ client/server 库；用于 LibCarla 编译与依赖错误，不构建 Editor、wheel 或 Shipping。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-build-libcarla/SKILL.md",
+      "sha256": "710d40ea441f0f616418e959441f334fb60793bfffcf107c6a092243b9ca6036"
+    },
+    {
+      "name": "carla-build-python-api",
+      "description": "为指定 Python 构建 CARLA wheel，或在明确授权时安装到指定环境；用于 binding/wheel 错误，不改全局 Python。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-build-python-api/SKILL.md",
+      "sha256": "c1d74186c0462885755be4dbb4e0cbf217a9d4e1ffd7ec2f9e341a06382a5295"
+    },
+    {
+      "name": "carla-build-shipping",
+      "description": "仅在用户明确要求 CARLA Shipping 打包或运行 package.sh 时执行 build/cook/stage/archive/package；最终包必须由正式主分支生成，发布另行授权。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-build-shipping/SKILL.md",
+      "sha256": "8da8b3b7049531a9d09f512d99a26ca2e74ff814ecc7e78283a159cc8e5dca5f"
+    },
+    {
+      "name": "carla-camera-depth",
+      "description": "配置 CARLA 深度相机并解码 RGB24 深度；用于距离图、深度单位、原始图与灰度显示差异、Linux 深度材质排障。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-depth/SKILL.md",
+      "sha256": "3e3870b481923bb28d3da63f1b8b44386710fc75f5e89f0c7d9e33b6504477e5",
+      "blueprint": "sensor.camera.depth"
+    },
+    {
+      "name": "carla-camera-dvs",
+      "description": "配置 CARLA DVS 事件相机并解码时间、像素和极性；用于正负阈值、噪声、不应期、稀疏事件及无事件窗口诊断。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-dvs/SKILL.md",
+      "sha256": "c98d98811bcaf07c61eefa012c9344f02b3db25a454ff56a346a8140224851b3",
+      "blueprint": "sensor.camera.dvs"
+    },
+    {
+      "name": "carla-camera-fisheye",
+      "description": "配置 CARLA fisheye 相机；用于 Kannala_Brandt、Conti、Equidistant、Scaramuzza 投影、k1–k6、cube face、拼接和 ImageCube 输出解码。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-fisheye/SKILL.md",
+      "sha256": "dc89a95a3f393e9061717b45c75542088d9370e00014bc5f133908786e39ae22",
+      "blueprint": "sensor.camera.fisheye"
+    },
+    {
+      "name": "carla-camera-instance",
+      "description": "配置 CARLA 实例分割相机并核对语义与实例编码；用于同类目标分离、实例掩码和跨帧身份边界，避免将像素 ID 当作 Actor.id。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-instance/SKILL.md",
+      "sha256": "0857d22f5c7a2929670caceff482921731713fb96a88ffdc1dcf8c61dc1cc53a",
+      "blueprint": "sensor.camera.instance_segmentation"
+    },
+    {
+      "name": "carla-camera-normals",
+      "description": "配置 CARLA 法线相机并正确读取颜色编码法线；用于表面方向图、法线显示和坐标空间核验，识别 Image 模板别名而非虚构 NormalsImage Python 类型。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-normals/SKILL.md",
+      "sha256": "95513c13b9fa757a5f97bc8f054869fcf0838d1f9d8a2061d5369d8063c06b4a",
+      "blueprint": "sensor.camera.normals"
+    },
+    {
+      "name": "carla-camera-optical-flow",
+      "description": "配置 CARLA 光流相机并读取二维 float32 流；用于帧间运动、光流数值与彩色显示差异，避免按 BGRA 或物理速度解码。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-optical-flow/SKILL.md",
+      "sha256": "c0912f14b7afd16fa352547620cb87bb467d75e135c2be58b4d76ae5f04f974d",
+      "blueprint": "sensor.camera.optical_flow"
+    },
+    {
+      "name": "carla-camera-rgb",
+      "description": "配置和采集 CARLA RGB 相机；用于内参、镜头畸变、曝光、后处理、BGRA/YUV 输出及 Python 图像回调诊断。深度、标签和事件相机走各专项。",
+      "category": "sensors",
+      "execution": "cli",
+      "cli_operations": [
+        "capture.run",
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-rgb/SKILL.md",
+      "sha256": "1ff2d32ebf4879732cf2dbc5f695f043ab0dcbbf2ea168f216b94cbec8f15e4d",
+      "blueprint": "sensor.camera.rgb"
+    },
+    {
+      "name": "carla-camera-semantic",
+      "description": "配置 CARLA 语义分割相机并导出类别标签；用于原始类别 ID、CityScapesPalette、标签颜色和自定义分类核对。实例身份另走 instance 相机。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-semantic/SKILL.md",
+      "sha256": "8d64fae2f9daf75b823d799c884e5b1fbef845a0f292d0ba67b6224d148d95f6",
+      "blueprint": "sensor.camera.semantic_segmentation"
+    },
+    {
+      "name": "carla-camera-stereo",
+      "description": "配置 CARLA stereo 相机并处理成组左右图、左深度和视差；用于基线、enable_depth、uint16 单位、格式与组内帧一致性。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-camera-stereo/SKILL.md",
+      "sha256": "1ba828d5cfc027678e61b77dd174062c9574815268a2479dd4a1d0e7acd98374",
+      "blueprint": "sensor.camera.stereo"
+    },
+    {
+      "name": "carla-capture",
+      "description": "执行有界 CARLA 原始数据采集，管理 warmup、frame/timestamp、超时和清理；用于抓样本或多传感器同步采集。CLI 当前支持 RGB/RayCast 单传感器，其余采集按原生流程；数据解释与研究判断分别交专项。",
+      "category": "data",
+      "execution": "cli",
+      "cli_operations": [
+        "capture.run"
+      ],
+      "file": "skills/carla-capture/SKILL.md",
+      "sha256": "1520342f9d1ac8f2bda42f767d618443f89bacb70aba37887d60360776fcc8c6"
+    },
+    {
+      "name": "carla-carsim",
+      "description": "启用 CARLA CarSim 插件 simfile、切换 CarSim 道路模型并核对后端失败；依赖安装/构建与 server 可读 simfile，UDP CarSim 走独立入口。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-carsim/SKILL.md",
+      "sha256": "48cf49bb594853e44c354b23b1e02d75cefbd63c5bef9697b2a830ac92eff21a"
+    },
+    {
+      "name": "carla-carsim-udp",
+      "description": "配置 CARLA CarSim UDP peer IP/port、substep 与状态回传；用于该专属外部动力学协议接入，须核对 peer、构建和报文，不与其他 UDP 后端混称。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-carsim-udp/SKILL.md",
+      "sha256": "6f8eb5444f027cf9340575956ad577bed12f77255758aeecbd407fd43668b921"
+    },
+    {
+      "name": "carla-chrono",
+      "description": "用 CARLA 条件支持的 Chrono vehicle/powertrain/tire JSON、base path 与 substep 切换动力学；需 server 的 Chrono 构建和模型资产，不管理其他后端。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-chrono/SKILL.md",
+      "sha256": "6c458594a790cd04f622d8764fe436876df595a8c698d82a1fe83e3b6557a847"
+    },
+    {
+      "name": "carla-clock",
+      "description": "管理 CARLA 同步/异步、固定步长、物理 substep、有界 tick 和回调，以及定制 pause/free tick；用于帧不推进、步长不一致或双 tick owner 问题。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "world.tick"
+      ],
+      "file": "skills/carla-clock/SKILL.md",
+      "sha256": "e4b9e938bc610e606e8f9b695586266f27d8cf15a950359f2481db912faa875f"
+    },
+    {
+      "name": "carla-cluster",
+      "description": "核查 CARLA Cluster 成员注册、heartbeat、类型化消息与 RPC 连通；只覆盖协议组件，不承诺完整多机或 multiGPU 调度。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-cluster/SKILL.md",
+      "sha256": "32bcd6173d5f198972a179052c1e2cd820a12e28ff84d4b8dff512d59e5c5e01"
+    },
+    {
+      "name": "carla-collision-sensor",
+      "description": "监听和解释 CARLA 碰撞事件；用于碰撞双方、normal_impulse、事件去重与碰撞/overlap 通道排障，不用于提前避障或连续距离流。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-collision-sensor/SKILL.md",
+      "sha256": "9a482a327e3b960d7dc2cdaed4c826ebd63ec154e0a9238154b2eb3e26679def",
+      "blueprint": "sensor.other.collision"
+    },
+    {
+      "name": "carla-compare",
+      "description": "离线比较已有 CARLA 研究 run，核对冻结输入、原始产物与独立配对后重算结果；用于检查改善、波动或证据篡改。不启动仿真、不补跑、不应用获胜参数。",
+      "category": "research",
+      "execution": "cli",
+      "cli_operations": [
+        "research.compare",
+        "research.report",
+        "research.status"
+      ],
+      "file": "skills/carla-compare/SKILL.md",
+      "sha256": "a4ea03db9611bd146a9a5be0898725fd753b1448e5e510436b4f17a0a2050099"
+    },
+    {
+      "name": "carla-connection",
+      "description": "诊断 CARLA profile、指定 Python wheel、client/server 版本、timeout 与 ready；用于首次连接、连接拒绝、解释器或版本不匹配。进程启动停止交 carla-server。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "connection.doctor"
+      ],
+      "file": "skills/carla-connection/SKILL.md",
+      "sha256": "865f2fa6495c98fd11fa91510915f285b98c19b105c0ef26b4ccdb71fd7ffed7"
+    },
+    {
+      "name": "carla-content-sync",
+      "description": "核实或同步 CARLA Unreal Content 的来源、版本配对与目标路径；用于资产缺失和代码资产不匹配，不触发构建或 Editor。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-content-sync/SKILL.md",
+      "sha256": "49a4ae352aca7c5fe45277e3391364131e85b732fa786d5eb1bd12f215bfc432"
+    },
+    {
+      "name": "carla-dataset",
+      "description": "将已有 CARLA capture 原始文件、帧身份、标定和真值组织成可追溯数据集，检查配对与缺失；用于离线导出或整理训练样本。不会为了补数据自动运行仿真。",
+      "category": "data",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-dataset/SKILL.md",
+      "sha256": "f49ed1e5d4e6c4da09730f5db8f56d743765d644eb6f1fdbb285798129ff091b"
+    },
+    {
+      "name": "carla-debug",
+      "description": "使用 CARLA DebugHelper 标绘、调试模式、UE console 与主/次服 console 诊断；不代替专用 debug-port 协议，不把任意 console 文本当作已验证操作。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-debug/SKILL.md",
+      "sha256": "db4a09e5046353ce39ce9cf4e794bee00693d9a2e086aa3a8b27d4a69b32b5f6"
+    },
+    {
+      "name": "carla-debug-port",
+      "description": "核查或使用 CARLA DebugPort UDP 的 ConnectTest/List/Data 协议、port/magic 与 console 回应；查询与执行分别授权，不代替普通 DebugHelper。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-debug-port/SKILL.md",
+      "sha256": "553eebc6fafcb629b1144cfe258e9a92a68879a92b3b3b965b5b203938d90204"
+    },
+    {
+      "name": "carla-display",
+      "description": "管理 CARLA quality、窗口和 secondary HDMI/device/Xserver sensor viewport；用于本地或多显示设备显示，依赖显示环境与插件，不负责 sensor 原始采集。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-display/SKILL.md",
+      "sha256": "2b42a400e7bbbff6e552e20501ae4d2e79a23a588bf743b3500cea668188e117"
+    },
+    {
+      "name": "carla-dspace-udp",
+      "description": "配置 CARLA Dspace UDP peer IP/port、substep 与状态回传；用于该专属外部动力学协议接入，须核对 peer、构建和报文，不与其他 UDP 后端混称。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-dspace-udp/SKILL.md",
+      "sha256": "105db372f62b933490a4eb7fe0e049500f5d07b04d25567bde232c70d2a4f8d1"
+    },
+    {
+      "name": "carla-editor-launch",
+      "description": "启动已有 CARLA Unreal Editor、打开指定项目或地图；用于 launch-only，不编译过期目标，缺二进制时交 build-editor。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-editor-launch/SKILL.md",
+      "sha256": "1f4ad6c53144698c0af48507fe8258c6998aba15bb6ce1cf1ae18601890d8300"
+    },
+    {
+      "name": "carla-environment-setup",
+      "description": "定位或准备 CARLA UE5 的 OS、编译工具、UE fork、Python 与依赖；用于安装前检查或明确要求的环境安装，不用于直接构建和启动。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-environment-setup/SKILL.md",
+      "sha256": "05125bc609e397eccd6f11e6b7dcf2a4f21b8945b7bd6fa266e33cbb6ff11391"
+    },
+    {
+      "name": "carla-excavator",
+      "description": "配置 CARLA Excavator bucket/load、挖点卸点和装载速度，启动停止作业并绑定自有 MiningTruck；不替代矿卡行驶或完整土壤物理模拟。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-excavator/SKILL.md",
+      "sha256": "4f73eb793296af5f921766e93ee6c3fd952c87cc31c5aba557771659444c5a2b"
+    },
+    {
+      "name": "carla-fbx-import",
+      "description": "准备或导入 FBX 地图/props package JSON，核对导入设置与 UE5 适配；用于工程资产导入，不走 runtime import_asset、USD 或 Houdini。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-fbx-import/SKILL.md",
+      "sha256": "1098f67c69b6835a1f52058ffe9c0f3e77c0361e156431f33767a24a40480b1d"
+    },
+    {
+      "name": "carla-gltf-load",
+      "description": "核实并使用 WITH_GLTF 条件下的 GLB static mesh/车辆加载路线；不泛化为任意 glTF 地图导入，不代替 factory 注册。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-gltf-load/SKILL.md",
+      "sha256": "cec9bbb01f6c0329abe9869075d7da8637429a56b2806d0c5ac58b48a680f41d"
+    },
+    {
+      "name": "carla-gnss",
+      "description": "配置 CARLA GNSS 并解释经纬高、噪声/偏置与地图地理参考；用于地理坐标观测，避免声称具备卫星遮挡、多径或完整 GNSS 传播模型。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-gnss/SKILL.md",
+      "sha256": "d97a1df23775141dbfa16b875ea0de2f2fa8d06ca94e6456985a54d5564bf72d",
+      "blueprint": "sensor.other.gnss"
+    },
+    {
+      "name": "carla-ground-truth",
+      "description": "读取 CARLA WorldSnapshot/ActorSnapshot/Timestamp，配置 listen_actors 与 GroundTruthOutput 的 OASIS 发布边界；不与 target sensor 或 OSI protobuf 混称。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-ground-truth/SKILL.md",
+      "sha256": "6dd732f9b20068867a4c1a0a2dae7e38452aef4fe876b3fde0cafcb95c015ed0"
+    },
+    {
+      "name": "carla-houdini-import",
+      "description": "把已有 Houdini 导出 actors 接入 CARLA large-map sublevels 并校正 tile 坐标；不执行外部 Houdini 建模或 graph。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-houdini-import/SKILL.md",
+      "sha256": "80c451d8066e5b4f85809c70dbf64c1490e06da10a0273cc44f9161f98876620"
+    },
+    {
+      "name": "carla-imu",
+      "description": "配置 CARLA IMU 并解释加速度、角速度与 compass；用于各轴噪声/偏置、单位、sensor 坐标、重力与初始差分瞬态，不负责融合定位。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-imu/SKILL.md",
+      "sha256": "5b6ab0dc589e77c711f722fde17b00e2715b4caf926eb920c2ff253f04896958",
+      "blueprint": "sensor.other.imu"
+    },
+    {
+      "name": "carla-lane-invasion-sensor",
+      "description": "监听 CARLA vehicle 越线事件；用于车体边界穿过车道标线、crossed_lane_markings 与客户端计算排障，不按服务端连续传感器流诊断。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lane-invasion-sensor/SKILL.md",
+      "sha256": "f5473753d2ced5003c0a5cf6833d4361e0563c82a95ff080ce52c8fbdb11c5dc",
+      "blueprint": "sensor.other.lane_invasion"
+    },
+    {
+      "name": "carla-large-map",
+      "description": "在 Editor 生成或整理 CARLA main map、tile maps 和 tile 元信息；不处理运行时 streaming 策略、navmesh 或完整打包。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-large-map/SKILL.md",
+      "sha256": "a5ef4c80f5977f5a6813695bbf9102c355e5358b2a932626eb384f1cf33bf2e7"
+    },
+    {
+      "name": "carla-lidar-at128",
+      "description": "配置 CARLA CPU AT128 LiDAR；用于三组扫描资产、256 点分块、MemsLidarMeasurement、时间/CRC 与 UDP 包核对。GPU AT128 预设另走 sc_lidar。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lidar-at128/SKILL.md",
+      "sha256": "f225dc60cfcd28033524b3ef1165c0407ed4913b9e07db198f2d78deab4cd58b",
+      "blueprint": "sensor.lidar.at128"
+    },
+    {
+      "name": "carla-lidar-gpu",
+      "description": "配置 CARLA SceneCapture GPU LiDAR；用于 mechanical、AT128、M1、Pandar64 预设、扫描资产、CPU/GPU 噪声以及 stream/UDP 输出边界。",
+      "category": "sensors",
+      "execution": "conditional",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lidar-gpu/SKILL.md",
+      "sha256": "4f827e39044783c9b39eefae59aab4268bd51a492306c33a534b915aa20824c8",
+      "blueprint": "sensor.lidar.sc_lidar"
+    },
+    {
+      "name": "carla-lidar-mems",
+      "description": "配置 CARLA 定制 MEMS LiDAR；用于 CSV 扫描轨迹、运动畸变、beam index、距离噪声及 MemsLidarMeasurement 采集。要求 custom-mems 能力和真实扫描资产。",
+      "category": "sensors",
+      "execution": "conditional",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lidar-mems/SKILL.md",
+      "sha256": "d8c7df3a2f43c9ebc0ac1d8dac2698c9e40c8e8b074ec6f10ea7ec1b78264c3d",
+      "blueprint": "sensor.lidar.ray_cast_mems"
+    },
+    {
+      "name": "carla-lidar-raycast",
+      "description": "配置和采集 CARLA 标准 RayCast LiDAR；用于通道、扫描频率/FOV、dropoff、BRDF、距离噪声和 XYZI 点云解码。semantic、MEMS、AT128、GPU 路径另走专项。",
+      "category": "sensors",
+      "execution": "cli",
+      "cli_operations": [
+        "capture.run",
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lidar-raycast/SKILL.md",
+      "sha256": "676f406ae66236f96d17fe0c4df74b42bd0ad973f75635212f075deef217e9aa",
+      "blueprint": "sensor.lidar.ray_cast"
+    },
+    {
+      "name": "carla-lidar-semantic",
+      "description": "配置 CARLA semantic LiDAR 并解码几何、入射角和对象标签；用于 point/cos_inc_angle/object_idx/object_tag，避免当作 XYZI 点云。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-lidar-semantic/SKILL.md",
+      "sha256": "d0b0a343ff4b2533b4cedc511768ab59e178b9e2013f8d89851e3326bad178a4",
+      "blueprint": "sensor.lidar.ray_cast_semantic"
+    },
+    {
+      "name": "carla-map",
+      "description": "查询 CARLA spawn points、Waypoint、道路车道拓扑、junction、crosswalk 和地理坐标，导出 OpenDRIVE 或地图缓存；不控制车辆或信号相位。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [
+        "map.inspect"
+      ],
+      "file": "skills/carla-map/SKILL.md",
+      "sha256": "10ddb5aa99014c97692c62925fb38bbb7ec8488070daeb0ce033e33805dd226d"
+    },
+    {
+      "name": "carla-map-cook",
+      "description": "在已有 CARLA Editor 工具链中仅 cook 指定地图并核对 cooked 输出；用于 single_map_package.sh，不声称生成独立可分发地图包。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-map-cook/SKILL.md",
+      "sha256": "bcefc38a87a81ddf3d62757f797eb02ec44628c473a757382f8b01f02e3761ba"
+    },
+    {
+      "name": "carla-map-dressing",
+      "description": "离线布置 CARLA 地图的植被、misc actors、ROI、水体或 weather actor 并保存；实时天气与灯光操作走运行时 skills。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-map-dressing/SKILL.md",
+      "sha256": "b19ad42f381d3f59b20b6dbed4a075ec5eb334c090ff6ae2297e19358f8c5d2d"
+    },
+    {
+      "name": "carla-map-landmarks",
+      "description": "按 CARLA OpenDRIVE 标志 ID、类型、方向、有效车道或 Waypoint 距离查询 landmark 并映射运行时标志；动态灯态与相位归 traffic-signals。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-map-landmarks/SKILL.md",
+      "sha256": "1bf3e47a31105a18fe0e9d16ca877c60abda4ed3492c9bc5307d2f26a8074e32"
+    },
+    {
+      "name": "carla-map-materials",
+      "description": "独立恢复已导入 CARLA 地图的语义目录、road painter/decals 和 cook 前地图准备；不重导全部 FBX，不编写 shader 或打包。",
+      "category": "engineering",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-map-materials/SKILL.md",
+      "sha256": "2378985329240317059276a7f6e57dcde6797b237973b5efb53a71150b0623fe"
+    },
+    {
+      "name": "carla-map-optimize",
+      "description": "审计 CARLA 地图 mesh/material/asset/tag/path，筛选重复对象或在明确范围内做 ISM 合并；性能改善须另有 benchmark。",
+      "category": "engineering",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-map-optimize/SKILL.md",
+      "sha256": "bd4f34afbb9394b5f337c466d4ca6c02de612227a624b3eb46c6572c9b896f87"
+    },
+    {
+      "name": "carla-mining-truck",
+      "description": "读取和配置 CARLA MiningTruck 容量、载荷、举升/下降耗时及 bucket/overall/driving state，执行 lift/lower；道路行驶与挖掘机联动作业分流。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-mining-truck/SKILL.md",
+      "sha256": "c960b06d8a28feaeb0aca24f24605cd21baf5cc894c396d3edca1efcccbe8ecc"
+    },
+    {
+      "name": "carla-navigation-agent",
+      "description": "使用 BasicAgent、BehaviorAgent 或 ConstantVelocityAgent 的目的地、global plan、local planner/PID 进行有界客户端导航；不与 Traffic Manager 或手动控制同时接管车辆。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-navigation-agent/SKILL.md",
+      "sha256": "3289496b94070df7f5acffcb25ab079f43de313bb7866a7a87088c8294eebbdc"
+    },
+    {
+      "name": "carla-navmesh",
+      "description": "从 CARLA 场景碰撞或 FBX/OBJ 与 XODR crosswalk 生成 Walker 导航 bin；不生成 TM 路网，旧 tiled Recast 路线不支持。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-navmesh/SKILL.md",
+      "sha256": "fd8ea286d2afd89b7c99610562810a5a61e111667b5bf0167e203189f293e50f"
+    },
+    {
+      "name": "carla-obstacle-sensor",
+      "description": "配置 CARLA 前方障碍探测事件；用于检测距离、sweep 半径、only_dynamics 和障碍事件距离，区别于已经发生的 collision。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-obstacle-sensor/SKILL.md",
+      "sha256": "01f13c79bb442bee05d5668b462638837176db381a06b2065ffab05d17eccec5",
+      "blueprint": "sensor.other.obstacle"
+    },
+    {
+      "name": "carla-onboarding",
+      "description": "带新手按具体目标学习 CARLA，从真实连接、世界观测到一次有界操作并解释结果；用于入门、理解仿真时间或认识传感器。普通任务直接使用领域 skill，不强制上完整课程。",
+      "category": "learning",
+      "execution": "workflow",
+      "cli_operations": [
+        "blueprints.list",
+        "capture.run",
+        "connection.doctor",
+        "sensors.describe",
+        "world.inspect",
+        "world.tick"
+      ],
+      "file": "skills/carla-onboarding/SKILL.md",
+      "sha256": "6f78e9f713a4630b13b20cfaa5764527ec8413592b97c0d7fb863e9f5ff4dbe8"
+    },
+    {
+      "name": "carla-opendrive-authoring",
+      "description": "检查和接入 Editor 的 OpenDriveToMap ODR/tiles 制作路径；本基线道路网格/标线生成有空实现，不承诺完整 ODR→地图制作。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-opendrive-authoring/SKILL.md",
+      "sha256": "520caa389f92540e6aa5a3a42297cd5095b4138453ed6ca37106d9c47af42768"
+    },
+    {
+      "name": "carla-opendrive-world",
+      "description": "将 OpenDRIVE 导入或生成 CARLA world，管理生成地图名、删除及程序化树木建筑；用于 XODR runtime 世界，不负责 OSM 转换或 Editor 离线制图。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-opendrive-world/SKILL.md",
+      "sha256": "2d6a86e0f93d78000d51acaf882afe48ae401c307fb3387f43ac0d0ef66dd400"
+    },
+    {
+      "name": "carla-osi",
+      "description": "配置 CARLA OSI GroundTruth/TrafficUpdate 的对象、道路、逻辑车道与环境映射，核对 protobuf 版本和外部接收边界；不假定所有 OSI 字段完整或 ROS2 已连通。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-osi/SKILL.md",
+      "sha256": "cf3750bde6a79caed5aabab782a4585c1644a40cc1ed774b6e94c7ac2538a5ea"
+    },
+    {
+      "name": "carla-osm-conversion",
+      "description": "使用条件编译的 Osm2Odr 将 OSM XML 转为 OpenDRIVE，配置投影、偏移、道路过滤与信号生成；转换结果交 opendrive-world，不承诺道路运行正确。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-osm-conversion/SKILL.md",
+      "sha256": "d1dfb430c5e18acea2531cb3b118e7f450ae83bc89287caed38db3ea99622fec"
+    },
+    {
+      "name": "carla-parameter-search",
+      "description": "按冻结计划编排 CARLA 有限参数候选、独立重复与确认、预算和停止恢复；用于已授权的 Auto Research。复用基础采集，不自动改源码、构建、发布或把获胜参数写为默认。",
+      "category": "research",
+      "execution": "cli",
+      "cli_operations": [
+        "research.report",
+        "research.resume",
+        "research.start",
+        "research.status",
+        "research.stop",
+        "research.validate"
+      ],
+      "file": "skills/carla-parameter-search/SKILL.md",
+      "sha256": "87f34292654e3d434a553d2da7294da62745af401de9992a1d5454f1245900d3"
+    },
+    {
+      "name": "carla-perfect-control",
+      "description": "启用 CARLA perfect movement backend 及其 substep，执行定制状态/轨迹控制并检查默认后端恢复边界；不宣称该模型具有真实动力学。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-perfect-control/SKILL.md",
+      "sha256": "f251aee06b42430ab0158c82d342ec4a9d075b7147cb6ade02f3a05926932eaf"
+    },
+    {
+      "name": "carla-prop-assets",
+      "description": "把已有 StaticMesh 注册成 static.prop.* 并保存 factory/package JSON；用于 prop 资产注册，不负责运行时 spawn/control。",
+      "category": "engineering",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-prop-assets/SKILL.md",
+      "sha256": "c2237bc14f8c8b94fd6045ab92f52217dc6725eecd37e52433bd07539f6de716"
+    },
+    {
+      "name": "carla-radar-mmwave",
+      "description": "配置 CARLA 毫米波雷达信号模型；用于载频、功率、天线增益、热噪声、SNR、角分辨率、延迟及目标检测字段，识别未实现的常量置信度/测高。",
+      "category": "sensors",
+      "execution": "conditional",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-radar-mmwave/SKILL.md",
+      "sha256": "3406dca488dfff6ad99b9fcb389f36a17a3598d25ed40e963e71e6a67c8a2cb5",
+      "blueprint": "sensor.radar.millimeter_wave"
+    },
+    {
+      "name": "carla-radar-oasis",
+      "description": "配置 CARLA Oasis 目标级雷达；用于遮挡筛选、目标数量、坐标方向及目标位姿/速度/尺寸/RCS 输出，避免与普通射线雷达或 target 真值混用。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-radar-oasis/SKILL.md",
+      "sha256": "d499f1caf1c162881ba6326917211be6f1e210bc13f94525e085220103a8b3a3",
+      "blueprint": "sensor.other.radar_oasis"
+    },
+    {
+      "name": "carla-radar-raycast",
+      "description": "配置 CARLA 射线雷达并解码径向速度、方位、仰角和距离；用于 FOV/range/points_per_second 与 RadarMeasurement 点检测，不处理 Oasis 目标级结构。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-radar-raycast/SKILL.md",
+      "sha256": "3221f7ae6c6bfd63758fa145ba22ee666237ce02000ee1d9f55c7905989d6af1",
+      "blueprint": "sensor.other.radar"
+    },
+    {
+      "name": "carla-recorder",
+      "description": "使用 CARLA recorder 文件录制、查询碰撞/阻塞并按时间回放，设置 follow/sensor replay/倍速/ignore/keep_actors；原始 sensor 文件采集仍走 capture。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-recorder/SKILL.md",
+      "sha256": "69fe629f6e35bbb02d0c2b323626b8d4e1ceff10ba59a09b26315809563bdb5b"
+    },
+    {
+      "name": "carla-research",
+      "description": "兼容旧 carla-research 入口，仅在显式指定旧名称或研究意图尚未细分时使用；按目标路由到实验设计、固定测量、只读比较或有限参数搜索。",
+      "category": "compatibility",
+      "execution": "alias",
+      "cli_operations": [],
+      "file": "skills/carla-research/SKILL.md",
+      "sha256": "075efb7c2f2af86084195be067ae2dc86f33ff1b09ef22caf327153ca07c9325"
+    },
+    {
+      "name": "carla-research-plan",
+      "description": "把 CARLA 实验问题转成冻结 workload、允许变量、有效性与比较条件、独立确认和预算，并离线校验计划；不因设计实验自动启动仿真。执行和候选搜索交 benchmark/parameter-search。",
+      "category": "research",
+      "execution": "cli",
+      "cli_operations": [
+        "research.validate"
+      ],
+      "file": "skills/carla-research-plan/SKILL.md",
+      "sha256": "3b2180e365bdad5c95c18d02b183935739ae683a7f967eba924d36c8580eafeb"
+    },
+    {
+      "name": "carla-ros2-native",
+      "description": "在已有支持 ROS2 的 CARLA 二进制上配置 native sensor stack、publisher 与 RViz；顶层 Ros2Native 接线被注释时报告条件缺失，不改走外部 ROS bridge。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-ros2-native/SKILL.md",
+      "sha256": "ebf386a758b0895e9e94ff6f00aff9c9a62d94911e5717ad85336560ae73897b"
+    },
+    {
+      "name": "carla-route-planning",
+      "description": "用 CARLA GlobalRoutePlanner 的 topology、采样图和 A* 生成 Waypoint/RoadOption 路径；用于起终点路线、道路分叉与换道连接，不直接驱动车辆。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-route-planning/SKILL.md",
+      "sha256": "1988737cce883c27787f9328e703c956044a5cc19557ccefd6527d31f6441595"
+    },
+    {
+      "name": "carla-rss",
+      "description": "配置 CARLA 条件编译 RSS 感知与控制约束链；用于 RssResponse、路由目标、ego/other dynamics、actor constellation 和 RssRestrictor，要求匹配 RSS 构建与依赖。",
+      "category": "sensors",
+      "execution": "conditional",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-rss/SKILL.md",
+      "sha256": "66899b9b48224bc9d53b0b357f297347bafd51e93583d7c34ff4f46cafe40463",
+      "blueprint": "sensor.other.rss"
+    },
+    {
+      "name": "carla-runtime-assets",
+      "description": "管理 CARLA runtime 文件基目录、required files 下载、request_file、import_asset 与 static mesh 存在性检查；不负责 UE 资产制作、cook 或发布。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-runtime-assets/SKILL.md",
+      "sha256": "6ceee6363af0addc243f1aa7a63686d3965e4600297c9ab4502ef66f416bb19d"
+    },
+    {
+      "name": "carla-scene-lights",
+      "description": "使用 CARLA LightManager 的灯组、颜色、强度、active 状态和批量灯态，管理日夜循环；车辆灯与交通灯分别由 accessories/signals 负责。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-scene-lights/SKILL.md",
+      "sha256": "50802fdd47d4baf6a8faade609bc1d913c988ee19bec5d89c30c63ab6a2d6ac2"
+    },
+    {
+      "name": "carla-scene-materials",
+      "description": "构造 CARLA Color/FloatColor 纹理并应用到自有 actor 或授权对象的 diffuse/emissive/normal/ARM 通道；不制作 UE 材质资产，World 旧贴图入口为 deprecated。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-scene-materials/SKILL.md",
+      "sha256": "61644c19fe4de3c6afc34615dca494356f6bcc6c1bd2650e0789d13de7a87a41"
+    },
+    {
+      "name": "carla-scene-objects",
+      "description": "查询 CARLA 环境对象 label/ID/name/transform/bbox、level BB 和 static objects，按授权启停指定环境对象；动态 actor 生命周期与射线查询另走专项。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-scene-objects/SKILL.md",
+      "sha256": "7e53451053f7fa4b663829843f0f1c848cd3c6722da9e0f41019de1164147de3"
+    },
+    {
+      "name": "carla-scene-query",
+      "description": "使用 CARLA cast_ray、project_point、ground_projection 查询带标签几何命中；用于位置投影与可见几何检查，不替代真实 sensor 数据或道路 Waypoint 语义。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-scene-query/SKILL.md",
+      "sha256": "f118d4738cd9de2e3115e2e4b8c242619c287f5dd10eeeeb0aeda7af26a01770"
+    },
+    {
+      "name": "carla-semi-truck",
+      "description": "识别 CARLA 半挂车辆、读取 trailer transform 与 articulation angle，绑定自有 sensor 到拖车；车辆行驶交通用控制，不承诺任意拖车创建/连接接口。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-semi-truck/SKILL.md",
+      "sha256": "f442e6c9c1fc0440dc67bf5cfe77f7f14c11df17b9523730e8ec495a5a8200fc"
+    },
+    {
+      "name": "carla-sensor-extension",
+      "description": "开发新 CARLA sensor 的 UE definition、数据 serializer/registry 与 Python binding 全链路；使用现有 sensor 走对应专项。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-sensor-extension/SKILL.md",
+      "sha256": "976d8689311e09a38b6692e34a9484a74d3eb2cf351401504902e692a38901a0"
+    },
+    {
+      "name": "carla-sensor-rig",
+      "description": "配置 CARLA 传感器的父对象、安装位姿和组合布局，挂载或拆卸自有 sensor；用于安装多传感器、调整外参。各传感器物理参数和解码转对应专项，数据采集转 carla-capture。",
+      "category": "data",
+      "execution": "cli",
+      "cli_operations": [
+        "actors.destroy",
+        "actors.list",
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-sensor-rig/SKILL.md",
+      "sha256": "9b1809b0fd56432d27d99391161b38712d84ae0b288f46d9be19715e7c7eb8e0"
+    },
+    {
+      "name": "carla-sensors",
+      "description": "兼容旧 carla-sensors 入口，仅在显式指定旧名称或尚未确定传感器类型时使用；按请求路由到具体传感器专项或 carla-sensor-rig。",
+      "category": "compatibility",
+      "execution": "alias",
+      "cli_operations": [],
+      "file": "skills/carla-sensors/SKILL.md",
+      "sha256": "4c783b97305a4817ce249c106ee969746154fab02d886c852c6886e5df5d10d0"
+    },
+    {
+      "name": "carla-server",
+      "description": "启动和停止用户指定的已有 CARLA Shipping 包，核实端口、进程身份、日志与 RPC ready；不编译打包，不接管借用实例。",
+      "category": "engineering",
+      "execution": "workflow",
+      "cli_operations": [],
+      "file": "skills/carla-server/SKILL.md",
+      "sha256": "7d616d5c44531d7d828ec95cde13c731abecc226a38b09aa2c12dac7af6d43e0"
+    },
+    {
+      "name": "carla-session",
+      "description": "打开、关闭 CARLA Agent 独占 session，保存 settings、跟踪资源与 episode 并恢复；用于已授权多步操作的生命周期管理，不负责 server 进程或换图。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "session.close",
+        "session.open"
+      ],
+      "file": "skills/carla-session/SKILL.md",
+      "sha256": "6fb231284b14da5e342ba6f5206f62ae802b12bffa415afe4e8530b531ca9ddb"
+    },
+    {
+      "name": "carla-simulink-udp",
+      "description": "配置 CARLA Simulink UDP peer IP/port、substep 与状态回传；用于该专属外部动力学协议接入，须核对 peer、构建和报文，不与其他 UDP 后端混称。",
+      "category": "runtime",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-simulink-udp/SKILL.md",
+      "sha256": "f903023818128fbb4b2da7bc823ab4d726626d6f9bafd8c3527d06aed68ac6d5"
+    },
+    {
+      "name": "carla-spectator",
+      "description": "读取或移动 CARLA spectator、配置 ego follow/role/reclaim 观察视角；不创建训练 camera sensor，显示器和 secondary viewport 配置交 display。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [
+        "spectator.inspect"
+      ],
+      "file": "skills/carla-spectator/SKILL.md",
+      "sha256": "985557576d85a98ac1cafdd4a9c28a3da201828cdee340201405edc157b3584c"
+    },
+    {
+      "name": "carla-target-sensor",
+      "description": "配置 CARLA target 局部目标传感器；用于视域/遮挡、目标运动学、车道多项式、交通灯及端口输出，区别于全局真值、Oasis 雷达和 OSI。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-target-sensor/SKILL.md",
+      "sha256": "f824cff9ef1f09fa312f964acb0740571cab8898fae7792b637218af6c8114ac",
+      "blueprint": "sensor.other.target"
+    },
+    {
+      "name": "carla-terrain",
+      "description": "处理 CARLA Editor heightmap 地形、tile 接缝与碰撞重算；不把空 CreateTerrain 方法或保存成功当作可驾驶性验证。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-terrain/SKILL.md",
+      "sha256": "ec1186f74af04ee7046bc21d3a3d24a848f04415a5295f3aa66ad6b3fa8be4fa"
+    },
+    {
+      "name": "carla-tm-map-cache",
+      "description": "根据指定 XODR 生成 Traffic Manager 的 in-memory map binary/cache；不生成 Walker navmesh，也不运行旧 UE4 全量 import。",
+      "category": "engineering",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-tm-map-cache/SKILL.md",
+      "sha256": "bb94fc04c439b8940a5dd752fb7f40f018d7bc30b5f388bf7d21dbd5bb9dc605"
+    },
+    {
+      "name": "carla-traffic-manager",
+      "description": "配置 CARLA TM port/autopilot、sync/seed/hybrid/dormant respawn、速度距离换道碰撞规则及 path/route/action buffer；不做地图路线搜索或交通灯相位控制。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-traffic-manager/SKILL.md",
+      "sha256": "7a10ec18fcbf2d3c8b3beed0a94ea04d37368a3607a7ff4e8f6879ac4b98456c"
+    },
+    {
+      "name": "carla-traffic-signals",
+      "description": "查询 CARLA 交通灯的路口/ODR ID、灯态、倒计时、cycle、影响车道和 stop waypoints，管理定制相位组、冻结与 reset；单灯 freeze 在此基线影响全世界。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-traffic-signals/SKILL.md",
+      "sha256": "2f02093304489249e44b16fd03f1a717f6128c49ea9045ca53a01fbcf1be81c8"
+    },
+    {
+      "name": "carla-trajectory-control",
+      "description": "使用 sprint42 DriverControl/ValidFlag、Trajectory 点列、plan points、user trajectory 与车辆 body parameter；不与导航 Waypoint 路径、TM route 或 perfect movement backend 混用。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-trajectory-control/SKILL.md",
+      "sha256": "8714223bc71dad22006ba32f020a8122e176eb3404d82f78676529352d5b9553"
+    },
+    {
+      "name": "carla-ultrasonic",
+      "description": "配置 CARLA ultrasonic 超声传感器；用于声频、换能器、衰减、角采样、水泥附着与距离噪声，并按活跃 V2 单距离输出解码。",
+      "category": "sensors",
+      "execution": "native-api",
+      "cli_operations": [
+        "sensors.attach",
+        "sensors.describe"
+      ],
+      "file": "skills/carla-ultrasonic/SKILL.md",
+      "sha256": "ab01f1e4784fc79d4417d41fa60a5b29cfb0919aac25069281983c964ea259cf",
+      "blueprint": "sensor.other.ultrasonic"
+    },
+    {
+      "name": "carla-usd-import",
+      "description": "核查或接入 CARLA 的 USD prop/vehicle 导入、wheel/light 和车辆 Blueprint 路线；当前 Omniverse 构建分支未实现，不承诺开箱可用或通用地图 USD 导入。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-usd-import/SKILL.md",
+      "sha256": "4de5edc0dfcc4686f14354a7dca75f476a71fc227e6d0be9979d571953dc6f84"
+    },
+    {
+      "name": "carla-vehicle-accessories",
+      "description": "控制 CARLA 自有车辆灯光、车门、后视镜与方向盘视觉角，读取车辆灯态；道路交通灯和场景照明交各自专项。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-vehicle-accessories/SKILL.md",
+      "sha256": "977a8429c15884ae71cae734602c263aea336a7eda535fc69ba68df9605c17cf"
+    },
+    {
+      "name": "carla-vehicle-assets",
+      "description": "将已有车辆 Blueprint 注册到 CARLA factory 并核对保存/运行时可发现性；不负责车辆建模、USD 导入或动力学标定。",
+      "category": "engineering",
+      "execution": "conditional",
+      "cli_operations": [],
+      "file": "skills/carla-vehicle-assets/SKILL.md",
+      "sha256": "8cc41f46917198222ce09ace04966a33301db006950e3c86b8cc18bd75aca3c2"
+    },
+    {
+      "name": "carla-vehicle-control",
+      "description": "提交与回读 CARLA VehicleControl 的油门、制动、转向、档位和 user/local control；用于自有车辆手动控制，Ackermann、轨迹、TM 与外部模型各有独立接管权。",
+      "category": "runtime",
+      "execution": "cli",
+      "cli_operations": [
+        "vehicle.control"
+      ],
+      "file": "skills/carla-vehicle-control/SKILL.md",
+      "sha256": "713c081703eca5f27a6daba3ea0e48efb05ccbf4af265e2fdef5625bc6f652a6"
+    },
+    {
+      "name": "carla-vehicle-physics",
+      "description": "读取和应用 CARLA Chaos 车辆 PhysicsControl、轮胎悬架传动与质心，查询轮角/RPM/failure/telemetry；不把默认模型参数强套 CarSim、Chrono 或 UDP 后端。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-vehicle-physics/SKILL.md",
+      "sha256": "e28ef92d83965cd8674abdad40ab19bb0aeee93404b1344a17b7a1eb09f40144"
+    },
+    {
+      "name": "carla-walker-navigation",
+      "description": "使用 CARLA WalkerControl 或 WalkerAIController 的目标/速度、随机导航点、过街比例与 seed；用于行人移动，骨骼姿态交 walker-pose。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-walker-navigation/SKILL.md",
+      "sha256": "8cf3def0cb5068280abe08ace1ea48971c6baef63feb3291ef350caac8441b64"
+    },
+    {
+      "name": "carla-walker-pose",
+      "description": "读取 CARLA walker 骨骼 world/component/relative transform，设置、混合、显示姿态和采样动画；不负责 AI 导航、过街或行人位置控制。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [],
+      "file": "skills/carla-walker-pose/SKILL.md",
+      "sha256": "28dc2808bc3de1100e6d65eaed8d6b110ec67e1fdfdd4e5e8ea9ff65d7e7b9c1"
+    },
+    {
+      "name": "carla-weather",
+      "description": "读取和设置 CARLA 雨雾风太阳扬尘、降雪积雪和 environment_lighting_gain、天气预设；用于世界环境配置，不据天气参数断言 sensor 物理响应或标定准确。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [
+        "weather.inspect"
+      ],
+      "file": "skills/carla-weather/SKILL.md",
+      "sha256": "15f2e32f106220349162ab7c2457b7fd314d8bb2c1cda60bf30ceb47e6ded649"
+    },
+    {
+      "name": "carla-world",
+      "description": "查询 CARLA 当前世界、可用地图，或按授权 load/reload/unload 地图、地图层并检查加载状态；OpenDRIVE 生成和时钟策略分别交对应专项。",
+      "category": "runtime",
+      "execution": "native-api",
+      "cli_operations": [
+        "world.inspect"
+      ],
+      "file": "skills/carla-world/SKILL.md",
+      "sha256": "1b76bb30d16792d68a5bfcb88b90ae4d20243789cd0b5262addfae7357caca0d"
+    }
+  ]
+}

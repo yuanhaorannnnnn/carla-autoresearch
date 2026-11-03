@@ -1,0 +1,36 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "carla-agent",
+  "version": "0.1.0-dev.0",
+  "description": "Atomic CARLA skills, sensor workflows, and bounded Auto Research for coding agents.",
+  "author": {
+    "name": "yuanhaorannnnnn",
+    "url": "https://github.com/yuanhaorannnnnn"
+  },
+  "repository": "https://github.com/yuanhaorannnnnn/carla-autoresearch",
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "onboardingSkill": "./skills/carla-connection/SKILL.md",
+      "interface": {
+        "displayName": "CARLA Agent",
+        "shortDescription": "从仿真操作到可追溯实验",
+        "longDescription": "面向 CARLA 的细粒度技能、结构化操作与有边界的 Auto Research。当前为开发预览；仿真器与匹配的 PythonAPI 由本机环境提供。",
+        "developerName": "yuanhaorannnnnn",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "defaultPrompt": [
+          "帮我连接 CARLA，查看当前地图和可用传感器。",
+          "解释双目相机的输出格式与安装参数。",
+          "帮我设计一个有界的 LiDAR 参数对照实验。"
+        ],
+        "brandColor": "#F36E3A",
+        "composerIcon": "./assets/branding/icon-512.png",
+        "logo": "./assets/branding/icon.png"
+      }
+    }
+  }
+}
